@@ -985,12 +985,19 @@ const loadFamilyData = async () => {
     }
   }
 
-  const docRef = doc(db, "familyTrees", "main");
-  const snap = await getDoc(docRef);
-  const data = snap.exists() ? normalizeFamilyData(snap.data()) : getEmptyFamilyData();
+  try {
+    const docRef = doc(db, "familyTrees", "main");
+    const snap = await getDoc(docRef);
+    const data = snap.exists() ? normalizeFamilyData(snap.data()) : getEmptyFamilyData();
 
-  renderContent(data);
-  return data;
+    renderContent(data);
+    return data;
+  } catch (error) {
+    console.error("Firestore load failed", error);
+    const data = getEmptyFamilyData();
+    renderContent(data);
+    return data;
+  }
 };
 
 if (navToggle && nav) {
