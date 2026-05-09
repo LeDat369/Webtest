@@ -32,7 +32,7 @@
 
     <section class="auth-gate" id="auth-gate">
       <div class="auth-card">
-        <h2>Dang nhap</h2>
+        <h2 data-auth-title>Dang nhap</h2>
         <p class="auth-hint">Website chi hien noi dung sau khi dang nhap.</p>
         <form data-auth-form>
           <label>
@@ -43,9 +43,26 @@
             Mat khau
             <input type="password" name="password" required autocomplete="current-password" />
           </label>
-          <button class="btn" type="submit">Dang nhap</button>
+          <label data-auth-confirm hidden>
+            Xac nhan mat khau
+            <input type="password" name="confirm" autocomplete="new-password" />
+          </label>
+          <button class="btn" type="submit" data-auth-submit>Dang nhap</button>
         </form>
+        <p class="auth-switch">
+          <span data-auth-switch-text>Chua co tai khoan?</span>
+          <button class="link-button" type="button" data-auth-toggle>Dang ky</button>
+        </p>
         <p class="auth-error" data-auth-error hidden></p>
+      </div>
+    </section>
+
+    <section class="approval-gate" data-approval-gate hidden>
+      <div class="auth-card">
+        <h2>Cho phe duyet</h2>
+        <p class="auth-hint" data-approval-message>
+          Tai khoan cua ban dang cho admin phe duyet.
+        </p>
       </div>
     </section>
 
@@ -202,6 +219,19 @@
                   moi.
                 </p>
               </div>
+            </div>
+
+            <div class="admin-block" data-admin-approvals>
+              <h3>Phe duyet nguoi xem</h3>
+              <p class="admin-note">
+                Tai khoan moi dang ky se o trang thai cho duyet.
+              </p>
+              <div class="admin-actions">
+                <button class="btn ghost" type="button" data-approval-refresh>
+                  Tai danh sach
+                </button>
+              </div>
+              <div class="approval-list" data-approval-list></div>
             </div>
           </form>
 

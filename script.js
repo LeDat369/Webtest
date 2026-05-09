@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import {
   getAuth,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
@@ -10,6 +11,12 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -41,6 +48,13 @@ const nav = document.querySelector("[data-nav]");
 const authGate = document.getElementById("auth-gate");
 const authForm = document.querySelector("[data-auth-form]");
 const authError = document.querySelector("[data-auth-error]");
+const authTitle = document.querySelector("[data-auth-title]");
+const authSubmit = document.querySelector("[data-auth-submit]");
+const authToggle = document.querySelector("[data-auth-toggle]");
+const authSwitchText = document.querySelector("[data-auth-switch-text]");
+const authConfirm = document.querySelector("[data-auth-confirm]");
+const approvalGate = document.querySelector("[data-approval-gate]");
+const approvalMessage = document.querySelector("[data-approval-message]");
 const protectedEls = document.querySelectorAll("[data-protected]");
 const logoutButton = document.querySelector("[data-logout]");
 const adminEls = document.querySelectorAll("[data-admin]");
@@ -51,6 +65,8 @@ const treeEditorRoot = document.querySelector("[data-tree-editor]");
 const treeAddRootButton = document.querySelector("[data-tree-add-root]");
 const adminAddButtons = document.querySelectorAll("[data-admin-add]");
 const adminStatus = document.querySelector("[data-admin-status]");
+const approvalRefresh = document.querySelector("[data-approval-refresh]");
+const approvalList = document.querySelector("[data-approval-list]");
 
 const heroTitle = document.querySelector("[data-hero-title]");
 const overviewFields = {
@@ -69,6 +85,9 @@ let dataLoaded = false;
 let currentUser = null;
 let treeNodeId = 0;
 let draggedNode = null;
+let authMode = "login";
+
+const viewerCollection = "viewerRequests";
 
 const listConfigs = {
   members: {
@@ -104,6 +123,17 @@ const clearAuthError = () => {
   authError.hidden = true;
 };
 
+const setAuthMode = (mode) => {
+  authMode = mode;
+  if (authTitle) authTitle.textContent = mode === "login" ? "Dang nhap" : "Dang ky";
+  if (authSubmit) authSubmit.textContent = mode === "login" ? "Dang nhap" : "Dang ky";
+  if (authSwitchText)
+    authSwitchText.textContent =
+      mode === "login" ? "Chua co tai khoan?" : "Da co tai khoan?";
+  if (authToggle) authToggle.textContent = mode === "login" ? "Dang ky" : "Dang nhap";
+  if (authConfirm) authConfirm.hidden = mode !== "register";
+};
+
 const setAdminStatus = (message, isError = false) => {
   if (!adminStatus) return;
   if (!message) {
@@ -134,12 +164,26 @@ const isAdminUser = (user) => {
   return uidMatch || emailMatch;
 };
 
-const toggleProtected = (isVisible) => {
+const setProtectedVisible = (isVisible) => {
   protectedEls.forEach((el) => {
     el.hidden = !isVisible;
   });
-  if (authGate) authGate.hidden = isVisible;
+};
+
+const setAuthGateVisible = (isVisible) => {
+  if (authGate) authGate.hidden = !isVisible;
+};
+
+const setLogoutVisible = (isVisible) => {
   if (logoutButton) logoutButton.hidden = !isVisible;
+};
+
+const setApprovalGateVisible = (isVisible, message) => {
+  if (approvalGate) approvalGate.hidden = !isVisible;
+  if (approvalMessage) {
+    approvalMessage.textContent =
+      message || "Tai khoan cua ban dang cho admin phe duyet.";
+  }
 };
 
 const showAdmin = (isAdmin) => {
@@ -147,6 +191,119 @@ const showAdmin = (isAdmin) => {
     el.hidden = !isAdmin;
   });
   if (!isAdmin) setAdminStatus("");
+};
+
+const ensureViewerRequest = async (user) => {
+  const requestRef = doc(db, viewerCollection, user.uid);
+  const snap = await getDoc(requestRef);
+  if (snap.exists()) return snap.data();
+
+  const data = {
+    email: user.email || "",
+    status: "pending",
+    createdAt: serverTimestamp(),
+  };
+  await setDoc(requestRef, data);
+  return data;
+};
+
+const checkViewerApproval = async (user) => {
+  if (isAdminUser(user)) return { approved: true, status: "admin" };
+
+  const data = await ensureViewerRequest(user);
+  const status = data.status || "pending";
+  const approved = status === "approved";
+  return { approved, status };
+};
+
+const renderApprovalList = (items) => {
+  if (!approvalList) return;
+  approvalList.innerHTML = "";
+
+  if (items.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "admin-note";
+    empty.textContent = "Khong co yeu cau cho duyet.";
+    approvalList.appendChild(empty);
+    return;
+  }
+
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "approval-item";
+
+    const meta = document.createElement("div");
+    meta.className = "approval-meta";
+
+    const email = document.createElement("strong");
+    email.textContent = item.email || "(khong co email)";
+
+    const uid = document.createElement("span");
+    uid.textContent = `UID: ${item.id}`;
+
+    meta.append(email, uid);
+
+    const actions = document.createElement("div");
+    actions.className = "approval-actions";
+
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.className = "tree-node-btn";
+    approve.textContent = "Duyet";
+    approve.addEventListener("click", async () => {
+      try {
+        await updateDoc(doc(db, viewerCollection, item.id), {
+          status: "approved",
+          reviewedAt: serverTimestamp(),
+          reviewedBy: currentUser?.uid || "",
+        });
+        loadApprovalRequests();
+      } catch (error) {
+        setAdminStatus("Khong the phe duyet. Vui long thu lai.", true);
+      }
+    });
+
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.className = "tree-node-btn";
+    reject.textContent = "Tu choi";
+    reject.addEventListener("click", async () => {
+      try {
+        await updateDoc(doc(db, viewerCollection, item.id), {
+          status: "rejected",
+          reviewedAt: serverTimestamp(),
+          reviewedBy: currentUser?.uid || "",
+        });
+        loadApprovalRequests();
+      } catch (error) {
+        setAdminStatus("Khong the tu choi. Vui long thu lai.", true);
+      }
+    });
+
+    actions.append(approve, reject);
+    row.append(meta, actions);
+    approvalList.appendChild(row);
+  });
+};
+
+const loadApprovalRequests = async () => {
+  if (!currentUser || !isAdminUser(currentUser)) return;
+  if (!approvalList) return;
+
+  try {
+    const requestQuery = query(
+      collection(db, viewerCollection),
+      where("status", "==", "pending")
+    );
+    const snapshot = await getDocs(requestQuery);
+    const items = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+    renderApprovalList(items);
+  } catch (error) {
+    setAdminStatus("Khong the tai danh sach duyet.", true);
+  }
 };
 
 const getEmptyFamilyData = () => ({
@@ -654,6 +811,13 @@ if (logoutButton) {
   logoutButton.addEventListener("click", () => signOut(auth));
 }
 
+if (authToggle) {
+  authToggle.addEventListener("click", () => {
+    setAuthMode(authMode === "login" ? "register" : "login");
+    clearAuthError();
+  });
+}
+
 if (adminLoadButton) {
   adminLoadButton.addEventListener("click", async () => {
     if (!currentUser || !isAdminUser(currentUser)) {
@@ -734,9 +898,30 @@ if (authForm) {
     const password = String(formData.get("password") || "");
 
     try {
+      if (authMode === "register") {
+        const confirm = String(formData.get("confirm") || "");
+        if (!confirm || confirm !== password) {
+          showAuthError("Mat khau xac nhan khong trung khop.");
+          return;
+        }
+
+        const credential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        await setDoc(doc(db, viewerCollection, credential.user.uid), {
+          email,
+          status: "pending",
+          createdAt: serverTimestamp(),
+        });
+        showAuthError("Dang ky thanh cong. Tai khoan dang cho duyet.");
+        return;
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      showAuthError("Dang nhap that bai. Vui long kiem tra email va mat khau.");
+      showAuthError("Dang nhap hoac dang ky that bai. Vui long thu lai.");
     }
   });
 }
@@ -748,7 +933,9 @@ if (configMissing) {
 onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
   if (user) {
-    toggleProtected(true);
+    setAuthGateVisible(false);
+    setLogoutVisible(true);
+
     const isAdmin = isAdminUser(user);
     showAdmin(isAdmin);
 
@@ -756,16 +943,41 @@ onAuthStateChanged(auth, async (user) => {
       setAdminStatus("Can cap nhat admin UID hoac email trong script.js.", true);
     }
 
-    if (!dataLoaded) {
-      dataLoaded = true;
-      const data = await loadFamilyData();
-      startReveal();
-      if (isAdmin) {
-        populateAdminForm(data);
+    const approval = await checkViewerApproval(user);
+    if (approval.approved) {
+      setProtectedVisible(true);
+      setApprovalGateVisible(false);
+
+      if (!dataLoaded) {
+        dataLoaded = true;
+        const data = await loadFamilyData();
+        startReveal();
+        if (isAdmin) {
+          populateAdminForm(data);
+          loadApprovalRequests();
+        }
+      } else if (isAdmin) {
+        loadApprovalRequests();
       }
+    } else {
+      setProtectedVisible(false);
+      const message =
+        approval.status === "rejected"
+          ? "Tai khoan da bi tu choi. Vui long lien he admin."
+          : "Tai khoan cua ban dang cho admin phe duyet.";
+      setApprovalGateVisible(true, message);
     }
   } else {
-    toggleProtected(false);
+    setAuthGateVisible(true);
+    setProtectedVisible(false);
+    setApprovalGateVisible(false);
+    setLogoutVisible(false);
     showAdmin(false);
   }
 });
+
+if (approvalRefresh) {
+  approvalRefresh.addEventListener("click", () => loadApprovalRequests());
+}
+
+setAuthMode("login");
