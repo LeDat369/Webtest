@@ -19,7 +19,7 @@ const firebaseConfig = {
   appId: "PASTE_APP_ID",
 };
 
-const adminUids = ["PASTE_ADMIN_UID"];
+const adminUids = ["t7TsVaH42oWE6sgOgyzKQY3Pcr53"];
 const adminEmails = ["lvd02082003@gmail.com"];
 
 const configMissing = Object.values(firebaseConfig).some((value) =>
