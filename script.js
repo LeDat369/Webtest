@@ -29,6 +29,10 @@ const firebaseConfig = {
   measurementId: "G-VXXP78TRYQ",
 };
 
+const sheetsEndpoint = "PASTE_APPS_SCRIPT_URL";
+const sheetsToken = "";
+const sheetsEnabled = sheetsEndpoint && !sheetsEndpoint.startsWith("PASTE_");
+
 const adminUids = ["t7TsVaH42oWE6sgOgyzKQY3Pcr53"];
 const adminEmails = ["lvd02082003@gmail.com"];
 
@@ -192,6 +196,126 @@ const showAdmin = (isAdmin) => {
     el.hidden = !isAdmin;
   });
   if (!isAdmin) setAdminStatus("");
+};
+
+const buildSheetsUrl = () => {
+  if (!sheetsEnabled) return "";
+  const url = new URL(sheetsEndpoint);
+  if (sheetsToken) url.searchParams.set("token", sheetsToken);
+  return url.toString();
+};
+
+const normalizeFamilyData = (data = {}) => {
+  const base = getEmptyFamilyData();
+  const treeRows = Array.isArray(data.treeRows) ? data.treeRows : [];
+  const tree = Array.isArray(data.tree)
+    ? data.tree
+    : treeRows.length
+    ? buildTreeFromRows(treeRows)
+    : base.tree;
+
+  return {
+    overview: { ...base.overview, ...(data.overview || {}) },
+    contactEmail: data.contactEmail || base.contactEmail,
+    tree,
+    members: Array.isArray(data.members) ? data.members : base.members,
+    timeline: Array.isArray(data.timeline) ? data.timeline : base.timeline,
+    gallery: Array.isArray(data.gallery) ? data.gallery : base.gallery,
+  };
+};
+
+const buildTreeFromRows = (rows = []) => {
+  const nodeMap = new Map();
+  const roots = [];
+
+  rows.forEach((row, index) => {
+    const id = String(row.id || row.ID || `row-${index + 1}`);
+    nodeMap.set(id, {
+      id,
+      parentId: String(row.parentId || row.parentID || row.parent || ""),
+      label: String(row.label || row.name || "").trim(),
+      order: Number(row.order || row.sort || index + 1) || index + 1,
+      children: [],
+    });
+  });
+
+  nodeMap.forEach((node) => {
+    if (node.parentId && nodeMap.has(node.parentId)) {
+      nodeMap.get(node.parentId).children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  const sortNodes = (nodes) => {
+    nodes.sort((a, b) => a.order - b.order);
+    nodes.forEach((child) => sortNodes(child.children));
+  };
+  sortNodes(roots);
+
+  const stripNode = (node) => ({
+    id: node.id,
+    label: node.label || "Khong ten",
+    children: node.children.map(stripNode),
+  });
+
+  return roots.map(stripNode);
+};
+
+const toTreeRows = (nodes = []) => {
+  let counter = 0;
+  const rows = [];
+
+  const walk = (list, parentId = "") => {
+    list.forEach((node, index) => {
+      const id = node.id || `node-${++counter}`;
+      const label = String(node.label || node.name || "").trim();
+      rows.push({
+        id,
+        parentId,
+        label,
+        order: index + 1,
+      });
+
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        walk(node.children, id);
+      }
+    });
+  };
+
+  walk(nodes);
+  return rows;
+};
+
+const fetchSheetData = async () => {
+  if (!sheetsEnabled) return null;
+  const url = buildSheetsUrl();
+  const response = await fetch(url, { method: "GET" });
+  if (!response.ok) {
+    throw new Error("SHEETS_READ_FAILED");
+  }
+  return response.json();
+};
+
+const saveSheetData = async (data) => {
+  if (!sheetsEnabled) return null;
+  const url = buildSheetsUrl();
+  const payload = {
+    ...data,
+    treeRows: toTreeRows(data.tree || []),
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error("SHEETS_WRITE_FAILED");
+  }
+
+  return response.json();
 };
 
 const ensureViewerRequest = async (user) => {
@@ -401,10 +525,11 @@ const canDropNode = (targetNode) => {
   return true;
 };
 
-const createTreeNode = (label = "") => {
+const createTreeNode = (label = "", persistId = "") => {
   const node = document.createElement("li");
   node.className = "tree-node";
   node.dataset.nodeId = nextTreeId();
+  node.dataset.persistId = persistId || "";
 
   const row = document.createElement("div");
   row.className = "tree-node-row";
@@ -528,7 +653,7 @@ const createTreeNode = (label = "") => {
 
 const buildTreeEditor = (nodes, parent) => {
   nodes.forEach((node) => {
-    const treeNode = createTreeNode(node.label || node.name || "");
+    const treeNode = createTreeNode(node.label || node.name || "", node.id || "");
     parent.appendChild(treeNode);
 
     if (Array.isArray(node.children) && node.children.length > 0) {
@@ -553,6 +678,7 @@ const populateTreeEditor = (nodes = []) => {
 const serializeTreeNode = (node) => {
   const input = node.querySelector(".tree-node-input");
   const label = String(input?.value || "").trim();
+  const persistId = String(node.dataset.persistId || "").trim();
   const childrenRoot = node.querySelector(".tree-node-children");
   const children = childrenRoot
     ? [...childrenRoot.children]
@@ -563,6 +689,7 @@ const serializeTreeNode = (node) => {
   if (!label && children.length === 0) return null;
 
   return {
+    id: persistId || "",
     label: label || "Khong ten",
     children,
   };
@@ -834,10 +961,33 @@ const startReveal = () => {
   observers.forEach((section) => io.observe(section));
 };
 
+const saveFamilyData = async (data) => {
+  if (sheetsEnabled) {
+    await saveSheetData(data);
+    return;
+  }
+
+  await setDoc(doc(db, "familyTrees", "main"), data);
+};
+
 const loadFamilyData = async () => {
+  if (sheetsEnabled) {
+    try {
+      const raw = await fetchSheetData();
+      const data = normalizeFamilyData(raw || {});
+      renderContent(data);
+      return data;
+    } catch (error) {
+      console.error("Sheets load failed", error);
+      const data = getEmptyFamilyData();
+      renderContent(data);
+      return data;
+    }
+  }
+
   const docRef = doc(db, "familyTrees", "main");
   const snap = await getDoc(docRef);
-  const data = snap.exists() ? snap.data() : getEmptyFamilyData();
+  const data = snap.exists() ? normalizeFamilyData(snap.data()) : getEmptyFamilyData();
 
   renderContent(data);
   return data;
@@ -941,9 +1091,13 @@ if (adminSaveButton) {
     setAdminStatus("Dang luu du lieu...");
 
     try {
-      await setDoc(doc(db, "familyTrees", "main"), data);
+      await saveFamilyData(data);
       renderContent(data);
-      setAdminStatus("Da luu du lieu.");
+      setAdminStatus(
+        sheetsEnabled
+          ? "Da luu du lieu len Google Sheets."
+          : "Da luu du lieu."
+      );
     } catch (error) {
       setAdminStatus("Khong the luu du lieu. Vui long thu lai.", true);
     }
