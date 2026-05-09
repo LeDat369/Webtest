@@ -59,6 +59,7 @@ const protectedEls = document.querySelectorAll("[data-protected]");
 const logoutButton = document.querySelector("[data-logout]");
 const adminEls = document.querySelectorAll("[data-admin]");
 const adminLoadButton = document.querySelector("[data-admin-load]");
+const adminSampleButton = document.querySelector("[data-admin-sample]");
 const adminSaveButton = document.querySelector("[data-admin-save]");
 const adminForm = document.querySelector("[data-admin-form]");
 const treeEditorRoot = document.querySelector("[data-tree-editor]");
@@ -319,6 +320,72 @@ const getEmptyFamilyData = () => ({
   timeline: [],
   gallery: [],
   contactEmail: "",
+});
+
+const getSampleFamilyData = () => ({
+  overview: {
+    title: "Gia pha toc DAT369",
+    clan: "Nguyen",
+    homeland: "Nam Bo",
+    motto: "Trong nghia, giu tin, yeu thuong",
+    generations: "4 the he",
+  },
+  contactEmail: "dat369@example.com",
+  tree: [
+    {
+      label: "Cu to: Nguyen Van A (1890 - 1970)",
+      children: [
+        {
+          label: "Ong to: Nguyen Van B (1915 - 1990)",
+          children: [
+            {
+              label: "Cha: Nguyen Van C (1940 - 2010)",
+              children: [
+                { label: "Con: Nguyen Van D (1965 - )" },
+                { label: "Con: Nguyen Van E (1968 - )" },
+              ],
+            },
+            {
+              label: "Co: Nguyen Thi F (1943 - )",
+              children: [{ label: "Con: Nguyen Thi G (1970 - )" }],
+            },
+          ],
+        },
+        {
+          label: "Ong to: Nguyen Van H (1920 - 2005)",
+          children: [{ label: "Cha: Nguyen Van I (1950 - )" }],
+        },
+      ],
+    },
+  ],
+  members: [
+    {
+      name: "Nguyen Van A",
+      role: "Cu to",
+      bio: "Lap nghiep, xay dung nen nep nha, khoi dau phat trien dong ho.",
+    },
+    {
+      name: "Nguyen Van B",
+      role: "Ong to",
+      bio: "Giu gia phong, day con chau nen nguoi.",
+    },
+    {
+      name: "Nguyen Thi F",
+      role: "Co",
+      bio: "Quan ly viec nha va giu ket noi cac nhanh ho.",
+    },
+  ],
+  timeline: [
+    { year: "1890", text: "Cu to Nguyen Van A chao doi." },
+    { year: "1938", text: "Gia toc chuyen den vung dinh cu hien nay." },
+    { year: "1975", text: "Hoan thanh nha tu duong dau tien." },
+    { year: "2026", text: "Hoan thien website gia pha DAT369." },
+  ],
+  gallery: [
+    { label: "Anh tuong nho", url: "" },
+    { label: "Nha tu duong", url: "" },
+    { label: "Hoat dong ho hang", url: "" },
+  ],
 });
 
 const nextTreeId = () => {
@@ -834,6 +901,20 @@ if (adminLoadButton) {
     } catch (error) {
       setAdminStatus("Khong the tai du lieu. Vui long thu lai.", true);
     }
+  });
+}
+
+if (adminSampleButton) {
+  adminSampleButton.addEventListener("click", () => {
+    if (!currentUser || !isAdminUser(currentUser)) {
+      setAdminStatus("Ban khong co quyen admin.", true);
+      return;
+    }
+
+    const data = getSampleFamilyData();
+    populateAdminForm(data);
+    renderContent(data);
+    setAdminStatus("Da nap du lieu mau. Bam Luu thay doi de ghi vao Firestore.");
   });
 }
 
