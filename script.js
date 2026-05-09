@@ -91,6 +91,7 @@ let currentUser = null;
 let treeNodeId = 0;
 let draggedNode = null;
 let authMode = "login";
+let revealStarted = false;
 
 const viewerCollection = "viewerRequests";
 
@@ -945,6 +946,9 @@ const renderContent = (data) => {
 };
 
 const startReveal = () => {
+  if (revealStarted) return;
+  revealStarted = true;
+
   const observers = document.querySelectorAll(".section, .hero, .site-footer");
   const io = new IntersectionObserver(
     (entries) => {
@@ -1189,11 +1193,11 @@ onAuthStateChanged(auth, async (user) => {
     if (approval.approved) {
       setProtectedVisible(true);
       setApprovalGateVisible(false);
+      startReveal();
 
       if (!dataLoaded) {
         dataLoaded = true;
         const data = await loadFamilyData();
-        startReveal();
         if (isAdmin) {
           populateAdminForm(data);
           loadApprovalRequests();
