@@ -13,10 +13,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_AUTH_DOMAIN",
-  projectId: "PASTE_PROJECT_ID",
-  appId: "PASTE_APP_ID",
+  apiKey: "AIzaSyBGumiAbsiQi_m7Ind84-ALwts2k18Rp5g",
+  authDomain: "webtest-e7852.firebaseapp.com",
+  projectId: "webtest-e7852",
+  storageBucket: "webtest-e7852.firebasestorage.app",
+  messagingSenderId: "271781052843",
+  appId: "1:271781052843:web:61d5dcdd82c87c699552ee",
+  measurementId: "G-VXXP78TRYQ",
 };
 
 const adminUids = ["t7TsVaH42oWE6sgOgyzKQY3Pcr53"];
