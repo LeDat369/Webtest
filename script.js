@@ -29,7 +29,8 @@ const firebaseConfig = {
   measurementId: "G-VXXP78TRYQ",
 };
 
-const sheetsEndpoint = "PASTE_APPS_SCRIPT_URL";
+const sheetsEndpoint =
+  "https://script.google.com/macros/s/AKfycbzxVdV9jp39KMf8y4DdXqlkeFuguOyc-GnlQP6JHNw-5BOu51k-QthXHnbHeNaRfnHY/exec";
 const sheetsToken = "";
 const sheetsEnabled = sheetsEndpoint && !sheetsEndpoint.startsWith("PASTE_");
 
