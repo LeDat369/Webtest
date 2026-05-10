@@ -30,7 +30,7 @@ const firebaseConfig = {
 };
 
 const sheetsEndpoint =
-  "https://script.google.com/macros/s/AKfycbzxVdV9jp39KMf8y4DdXqlkeFuguOyc-GnlQP6JHNw-5BOu51k-QthXHnbHeNaRfnHY/exec";
+  "https://script.google.com/macros/s/AKfycbzwvub9yj_JraSxmVHkU2ryhJNAy-yTKdzAqi2bYYR8JmHZj0SpVIoP5ML1rQ8L47r1/exec";
 const sheetsToken = "";
 const sheetsEnabled = sheetsEndpoint && !sheetsEndpoint.startsWith("PASTE_");
 
