@@ -232,15 +232,37 @@
             </div>
 
             <div class="admin-block" data-admin-approvals>
-              <h3>Phe duyet nguoi xem</h3>
+              <h3>Quan ly tai khoan</h3>
               <p class="admin-note">
-                Tai khoan moi dang ky se o trang thai cho duyet.
+                Admin phe duyet, thu hoi va quan ly nguoi xem.
               </p>
               <div class="admin-actions">
+                <button
+                  class="btn ghost"
+                  type="button"
+                  data-approval-filter="pending"
+                >
+                  Cho duyet
+                </button>
+                <button
+                  class="btn ghost"
+                  type="button"
+                  data-approval-filter="approved"
+                >
+                  Da duyet
+                </button>
+                <button
+                  class="btn ghost"
+                  type="button"
+                  data-approval-filter="rejected"
+                >
+                  Tu choi
+                </button>
                 <button class="btn ghost" type="button" data-approval-refresh>
-                  Tai danh sach
+                  Lam moi
                 </button>
               </div>
+              <div class="approval-counts" data-approval-counts></div>
               <div class="approval-list" data-approval-list></div>
             </div>
           </form>

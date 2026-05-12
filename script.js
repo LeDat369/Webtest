@@ -73,6 +73,8 @@ const adminAddButtons = document.querySelectorAll("[data-admin-add]");
 const adminStatus = document.querySelector("[data-admin-status]");
 const approvalRefresh = document.querySelector("[data-approval-refresh]");
 const approvalList = document.querySelector("[data-approval-list]");
+const approvalCounts = document.querySelector("[data-approval-counts]");
+const approvalFilters = document.querySelectorAll("[data-approval-filter]");
 
 const heroTitle = document.querySelector("[data-hero-title]");
 const overviewFields = {
@@ -92,6 +94,8 @@ let currentUser = null;
 let treeNodeId = 0;
 let draggedNode = null;
 let authMode = "login";
+let approvalCache = [];
+let approvalFilter = "pending";
 let revealStarted = false;
 
 const viewerCollection = "viewerRequests";
@@ -101,7 +105,9 @@ const listConfigs = {
     fields: [
       { name: "name", label: "Ten", type: "text" },
       { name: "role", label: "Vai tro", type: "text" },
-      { name: "bio", label: "Mo ta", type: "textarea" },
+      { name: "birthYear", label: "Nam sinh", type: "text" },
+      { name: "deathYear", label: "Nam mat", type: "text" },
+      { name: "bio", label: "Ghi chu", type: "textarea" },
     ],
   },
   timeline: {
@@ -343,19 +349,62 @@ const checkViewerApproval = async (user) => {
   return { approved, status };
 };
 
+const formatApprovalCounts = (items) => {
+  if (!approvalCounts) return;
+  const counts = items.reduce(
+    (acc, item) => {
+      const status = item.status || "pending";
+      if (status === "approved") acc.approved += 1;
+      else if (status === "rejected") acc.rejected += 1;
+      else acc.pending += 1;
+      return acc;
+    },
+    { pending: 0, approved: 0, rejected: 0 }
+  );
+
+  approvalCounts.textContent = `Cho duyet: ${counts.pending} | Da duyet: ${counts.approved} | Tu choi: ${counts.rejected}`;
+};
+
+const setApprovalFilter = (value) => {
+  approvalFilter = value;
+  approvalFilters.forEach((button) => {
+    button.classList.toggle(
+      "is-active",
+      button.getAttribute("data-approval-filter") === value
+    );
+  });
+  renderApprovalList(approvalCache);
+};
+
+const updateApprovalStatus = async (id, status) => {
+  try {
+    await updateDoc(doc(db, viewerCollection, id), {
+      status,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: currentUser?.uid || "",
+    });
+    loadApprovalRequests();
+  } catch (error) {
+    setAdminStatus("Khong the cap nhat trang thai tai khoan.", true);
+  }
+};
+
 const renderApprovalList = (items) => {
   if (!approvalList) return;
+  const filtered = items.filter((item) =>
+    approvalFilter ? (item.status || "pending") === approvalFilter : true
+  );
   approvalList.innerHTML = "";
 
-  if (items.length === 0) {
+  if (filtered.length === 0) {
     const empty = document.createElement("p");
     empty.className = "admin-note";
-    empty.textContent = "Khong co yeu cau cho duyet.";
+    empty.textContent = "Khong co tai khoan trong muc nay.";
     approvalList.appendChild(empty);
     return;
   }
 
-  items.forEach((item) => {
+  filtered.forEach((item) => {
     const row = document.createElement("div");
     row.className = "approval-item";
 
@@ -368,46 +417,45 @@ const renderApprovalList = (items) => {
     const uid = document.createElement("span");
     uid.textContent = `UID: ${item.id}`;
 
-    meta.append(email, uid);
+    const status = document.createElement("span");
+    status.className = "approval-status";
+    status.setAttribute("data-status", item.status || "pending");
+    status.textContent = item.status || "pending";
+
+    meta.append(email, uid, status);
 
     const actions = document.createElement("div");
     actions.className = "approval-actions";
 
-    const approve = document.createElement("button");
-    approve.type = "button";
-    approve.className = "tree-node-btn";
-    approve.textContent = "Duyet";
-    approve.addEventListener("click", async () => {
-      try {
-        await updateDoc(doc(db, viewerCollection, item.id), {
-          status: "approved",
-          reviewedAt: serverTimestamp(),
-          reviewedBy: currentUser?.uid || "",
-        });
-        loadApprovalRequests();
-      } catch (error) {
-        setAdminStatus("Khong the phe duyet. Vui long thu lai.", true);
-      }
-    });
+    if (item.status === "approved") {
+      const revoke = document.createElement("button");
+      revoke.type = "button";
+      revoke.className = "tree-node-btn";
+      revoke.textContent = "Thu hoi";
+      revoke.addEventListener("click", () => updateApprovalStatus(item.id, "rejected"));
+      actions.appendChild(revoke);
+    } else if (item.status === "rejected") {
+      const reapprove = document.createElement("button");
+      reapprove.type = "button";
+      reapprove.className = "tree-node-btn";
+      reapprove.textContent = "Duyet lai";
+      reapprove.addEventListener("click", () => updateApprovalStatus(item.id, "approved"));
+      actions.appendChild(reapprove);
+    } else {
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.className = "tree-node-btn";
+      approve.textContent = "Duyet";
+      approve.addEventListener("click", () => updateApprovalStatus(item.id, "approved"));
 
-    const reject = document.createElement("button");
-    reject.type = "button";
-    reject.className = "tree-node-btn";
-    reject.textContent = "Tu choi";
-    reject.addEventListener("click", async () => {
-      try {
-        await updateDoc(doc(db, viewerCollection, item.id), {
-          status: "rejected",
-          reviewedAt: serverTimestamp(),
-          reviewedBy: currentUser?.uid || "",
-        });
-        loadApprovalRequests();
-      } catch (error) {
-        setAdminStatus("Khong the tu choi. Vui long thu lai.", true);
-      }
-    });
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.className = "tree-node-btn";
+      reject.textContent = "Tu choi";
+      reject.addEventListener("click", () => updateApprovalStatus(item.id, "rejected"));
 
-    actions.append(approve, reject);
+      actions.append(approve, reject);
+    }
     row.append(meta, actions);
     approvalList.appendChild(row);
   });
@@ -418,15 +466,13 @@ const loadApprovalRequests = async () => {
   if (!approvalList) return;
 
   try {
-    const requestQuery = query(
-      collection(db, viewerCollection),
-      where("status", "==", "pending")
-    );
-    const snapshot = await getDocs(requestQuery);
+    const snapshot = await getDocs(collection(db, viewerCollection));
     const items = snapshot.docs.map((docSnap) => ({
       id: docSnap.id,
       ...docSnap.data(),
     }));
+    approvalCache = items;
+    formatApprovalCounts(items);
     renderApprovalList(items);
   } catch (error) {
     setAdminStatus("Khong the tai danh sach duyet.", true);
@@ -459,27 +505,32 @@ const getSampleFamilyData = () => ({
   contactEmail: "dat369@example.com",
   tree: [
     {
+      id: "A1",
       label: "Cu to: Nguyen Van A (1890 - 1970)",
       children: [
         {
+          id: "B1",
           label: "Ong to: Nguyen Van B (1915 - 1990)",
           children: [
             {
+              id: "C1",
               label: "Cha: Nguyen Van C (1940 - 2010)",
               children: [
-                { label: "Con: Nguyen Van D (1965 - )" },
-                { label: "Con: Nguyen Van E (1968 - )" },
+                { id: "D1", label: "Con: Nguyen Van D (1965 - )" },
+                { id: "D2", label: "Con: Nguyen Van E (1968 - )" },
               ],
             },
             {
+              id: "C2",
               label: "Co: Nguyen Thi F (1943 - )",
-              children: [{ label: "Con: Nguyen Thi G (1970 - )" }],
+              children: [{ id: "D3", label: "Con: Nguyen Thi G (1970 - )" }],
             },
           ],
         },
         {
+          id: "B2",
           label: "Ong to: Nguyen Van H (1920 - 2005)",
-          children: [{ label: "Cha: Nguyen Van I (1950 - )" }],
+          children: [{ id: "C3", label: "Cha: Nguyen Van I (1950 - )" }],
         },
       ],
     },
@@ -488,16 +539,21 @@ const getSampleFamilyData = () => ({
     {
       name: "Nguyen Van A",
       role: "Cu to",
+      birthYear: "1890",
+      deathYear: "1970",
       bio: "Lap nghiep, xay dung nen nep nha, khoi dau phat trien dong ho.",
     },
     {
       name: "Nguyen Van B",
       role: "Ong to",
+      birthYear: "1915",
+      deathYear: "1990",
       bio: "Giu gia phong, day con chau nen nguoi.",
     },
     {
       name: "Nguyen Thi F",
       role: "Co",
+      birthYear: "1943",
       bio: "Quan ly viec nha va giu ket noi cac nhanh ho.",
     },
   ],
@@ -831,9 +887,10 @@ const collectAdminFormData = () => {
 const buildTree = (nodes, parent) => {
   nodes.forEach((node) => {
     const li = document.createElement("li");
-    const span = document.createElement("span");
-    span.textContent = node.label || node.name || "";
-    li.appendChild(span);
+    const card = document.createElement("div");
+    card.className = "tree-card";
+    card.textContent = node.label || node.name || "";
+    li.appendChild(card);
 
     if (Array.isArray(node.children) && node.children.length > 0) {
       const ul = document.createElement("ul");
@@ -858,10 +915,18 @@ const renderMembers = (members) => {
     role.className = "role";
     role.textContent = member.role || "";
 
+    const meta = document.createElement("p");
+    meta.className = "member-meta";
+    const birth = String(member.birthYear || "").trim();
+    const death = String(member.deathYear || "").trim();
+    meta.textContent = birth || death ? `${birth || "?"} - ${death || ""}` : "";
+
     const bio = document.createElement("p");
     bio.textContent = member.bio || "";
 
-    card.append(name, role, bio);
+    card.append(name, role);
+    if (meta.textContent) card.append(meta);
+    if (bio.textContent) card.append(bio);
     membersRoot.appendChild(card);
   });
 };
@@ -1227,4 +1292,12 @@ if (approvalRefresh) {
   approvalRefresh.addEventListener("click", () => loadApprovalRequests());
 }
 
+approvalFilters.forEach((button) => {
+  button.addEventListener("click", () => {
+    const value = button.getAttribute("data-approval-filter");
+    if (value) setApprovalFilter(value);
+  });
+});
+
 setAuthMode("login");
+setApprovalFilter("pending");
