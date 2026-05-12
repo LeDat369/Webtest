@@ -29,8 +29,7 @@ const firebaseConfig = {
   measurementId: "G-VXXP78TRYQ",
 };
 
-const sheetsEndpoint =
-  "https://script.google.com/macros/s/AKfycbwmL-BUqXeem3wnBhaF4TM6_kAxNj116RGt70xhKYz_e6DHKnKLW9lHEF5b77azRq3r/exec";
+const sheetsEndpoint = "https://webtest-proxy.lvd02082003.workers.dev/";
 const sheetsToken = "";
 const sheetsEnabled = sheetsEndpoint && !sheetsEndpoint.startsWith("PASTE_");
 
