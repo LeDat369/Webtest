@@ -96,6 +96,8 @@ let draggedNode = null;
 let authMode = "login";
 let approvalCache = [];
 let approvalFilter = "pending";
+let autoSaveTimer = null;
+let autoSaveRunning = false;
 let revealStarted = false;
 
 const viewerCollection = "viewerRequests";
@@ -162,6 +164,29 @@ const setAdminStatus = (message, isError = false) => {
   } else {
     adminStatus.removeAttribute("data-state");
   }
+};
+
+const scheduleAutoSave = () => {
+  if (!sheetsEnabled) return;
+  if (!currentUser || !isAdminUser(currentUser)) return;
+  if (!adminForm) return;
+
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async () => {
+    if (autoSaveRunning) return;
+    autoSaveRunning = true;
+    setAdminStatus("Dang dong bo len Google Sheets...");
+
+    try {
+      const data = collectAdminFormData();
+      await saveFamilyData(data);
+      setAdminStatus("Da dong bo Google Sheets.");
+    } catch (error) {
+      setAdminStatus("Khong the dong bo Google Sheets.", true);
+    } finally {
+      autoSaveRunning = false;
+    }
+  }, 800);
 };
 
 const isAdminUser = (user) => {
@@ -603,6 +628,7 @@ const createTreeNode = (label = "", persistId = "") => {
   input.className = "tree-node-input";
   input.placeholder = "Nhan nut";
   input.value = label;
+  input.addEventListener("input", () => scheduleAutoSave());
 
   const actions = document.createElement("div");
   actions.className = "tree-node-actions";
@@ -635,16 +661,19 @@ const createTreeNode = (label = "", persistId = "") => {
 
   addChild.addEventListener("click", () => {
     children.appendChild(createTreeNode());
+    scheduleAutoSave();
   });
 
   remove.addEventListener("click", () => {
     node.remove();
+    scheduleAutoSave();
   });
 
   moveUp.addEventListener("click", () => {
     const prev = node.previousElementSibling;
     if (prev && node.parentElement) {
       node.parentElement.insertBefore(node, prev);
+      scheduleAutoSave();
     }
   });
 
@@ -652,6 +681,7 @@ const createTreeNode = (label = "", persistId = "") => {
     const next = node.nextElementSibling;
     if (next && node.parentElement) {
       node.parentElement.insertBefore(next, node);
+      scheduleAutoSave();
     }
   });
 
@@ -684,6 +714,7 @@ const createTreeNode = (label = "", persistId = "") => {
     row.classList.remove("drag-over");
     if (!canDropNode(node)) return;
     children.appendChild(draggedNode);
+    scheduleAutoSave();
   });
 
   children.addEventListener("dragover", (event) => {
@@ -703,6 +734,7 @@ const createTreeNode = (label = "", persistId = "") => {
     children.classList.remove("drag-over");
     if (!canDropNode(node)) return;
     children.appendChild(draggedNode);
+    scheduleAutoSave();
   });
 
   node.append(row, children);
@@ -786,6 +818,7 @@ const createListItem = (key, values = {}) => {
 
     input.setAttribute("data-field", field.name);
     input.value = values[field.name] || "";
+    input.addEventListener("input", () => scheduleAutoSave());
 
     label.appendChild(input);
     item.appendChild(label);
@@ -798,7 +831,10 @@ const createListItem = (key, values = {}) => {
   remove.type = "button";
   remove.className = "admin-remove";
   remove.textContent = "Xoa";
-  remove.addEventListener("click", () => item.remove());
+  remove.addEventListener("click", () => {
+    item.remove();
+    scheduleAutoSave();
+  });
 
   actions.appendChild(remove);
   item.appendChild(actions);
@@ -1092,12 +1128,14 @@ if (treeEditorRoot) {
     treeEditorRoot.classList.remove("drag-over");
     if (!canDropNode(null)) return;
     treeEditorRoot.appendChild(draggedNode);
+    scheduleAutoSave();
   });
 }
 
 if (treeAddRootButton) {
   treeAddRootButton.addEventListener("click", () => {
     if (treeEditorRoot) treeEditorRoot.appendChild(createTreeNode());
+    scheduleAutoSave();
   });
 }
 
@@ -1142,6 +1180,7 @@ if (adminSampleButton) {
     populateAdminForm(data);
     renderContent(data);
     setAdminStatus("Da nap du lieu mau. Bam Luu thay doi de ghi vao Firestore.");
+    scheduleAutoSave();
   });
 }
 
@@ -1188,11 +1227,13 @@ adminAddButtons.forEach((button) => {
     const root = getAdminListRoot(key);
     const item = createListItem(key);
     if (root && item) root.appendChild(item);
+    scheduleAutoSave();
   });
 });
 
 if (adminForm) {
   adminForm.addEventListener("submit", (event) => event.preventDefault());
+  adminForm.addEventListener("input", () => scheduleAutoSave());
 }
 
 if (authForm) {
