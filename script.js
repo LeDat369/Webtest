@@ -630,9 +630,9 @@ const createTreeNode = (label = "", persistId = "") => {
 
   const handle = document.createElement("span");
   handle.className = "tree-node-handle";
-  handle.textContent = "Keo";
+  handle.textContent = "Kéo";
   handle.setAttribute("draggable", "true");
-  handle.setAttribute("title", "Keo tha");
+  handle.setAttribute("title", "Kéo thả");
 
   const input = document.createElement("input");
   input.type = "text";
@@ -1063,6 +1063,12 @@ const startReveal = () => {
   revealStarted = true;
 
   const observers = document.querySelectorAll(".section, .hero, .site-footer");
+
+  if (typeof IntersectionObserver === "undefined") {
+    observers.forEach((section) => section.classList.add("in-view"));
+    return;
+  }
+
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -1076,6 +1082,11 @@ const startReveal = () => {
   );
 
   observers.forEach((section) => io.observe(section));
+
+  // Fallback: ensure content is visible if observers do not fire.
+  setTimeout(() => {
+    observers.forEach((section) => section.classList.add("in-view"));
+  }, 800);
 };
 
 const saveFamilyData = async (data) => {
