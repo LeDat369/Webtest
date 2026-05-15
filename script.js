@@ -1,10 +1,16 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
+  updateEmail,
+  updatePassword,
+  deleteUser,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   getFirestore,
@@ -12,6 +18,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -75,6 +82,17 @@ const approvalRefresh = document.querySelector("[data-approval-refresh]");
 const approvalList = document.querySelector("[data-approval-list]");
 const approvalCounts = document.querySelector("[data-approval-counts]");
 const approvalFilters = document.querySelectorAll("[data-approval-filter]");
+const provisionEmail = document.querySelector("[data-provision-email]");
+const provisionPassword = document.querySelector("[data-provision-password]");
+const provisionConfirm = document.querySelector("[data-provision-confirm]");
+const provisionSubmit = document.querySelector("[data-provision-submit]");
+const accountEmail = document.querySelector("[data-account-email]");
+const accountPassword = document.querySelector("[data-account-password]");
+const accountNewEmail = document.querySelector("[data-account-new-email]");
+const accountNewPassword = document.querySelector("[data-account-new-password]");
+const accountNewConfirm = document.querySelector("[data-account-new-confirm]");
+const accountUpdate = document.querySelector("[data-account-update]");
+const accountDelete = document.querySelector("[data-account-delete]");
 
 const heroTitle = document.querySelector("[data-hero-title]");
 const overviewFields = {
@@ -265,6 +283,23 @@ const buildSheetsUrl = () => {
   const url = new URL(sheetsEndpoint);
   if (sheetsToken) url.searchParams.set("token", sheetsToken);
   return url.toString();
+};
+
+const getProvisioningAuth = () => {
+  const existing = getApps().find((app) => app.name === "provisioning");
+  const provisioningApp =
+    existing || initializeApp(firebaseConfig, "provisioning");
+  return getAuth(provisioningApp);
+};
+
+const signInProvisioningUser = async (email, password) => {
+  const provisioningAuth = getProvisioningAuth();
+  const credential = await signInWithEmailAndPassword(
+    provisioningAuth,
+    email,
+    password
+  );
+  return { provisioningAuth, user: credential.user };
 };
 
 const normalizeFamilyData = (data = {}) => {
@@ -1285,6 +1320,229 @@ adminAddButtons.forEach((button) => {
 if (adminForm) {
   adminForm.addEventListener("submit", (event) => event.preventDefault());
   adminForm.addEventListener("input", () => scheduleAutoSave());
+}
+
+if (provisionSubmit) {
+  provisionSubmit.addEventListener("click", async () => {
+    if (!currentUser || !isAdminUser(currentUser)) {
+      setAdminStatus("Bạn không có quyền admin.", true);
+      return;
+    }
+
+    const email = String(provisionEmail?.value || "").trim();
+    const password = String(provisionPassword?.value || "");
+    const confirm = String(provisionConfirm?.value || "");
+
+    if (!email || !password) {
+      setAdminStatus("Vui lòng nhập email và mật khẩu.", true);
+      return;
+    }
+
+    if (password.length < 6) {
+      setAdminStatus("Mật khẩu phải có ít nhất 6 ký tự.", true);
+      return;
+    }
+
+    if (password !== confirm) {
+      setAdminStatus("Mật khẩu xác nhận không trùng khớp.", true);
+      return;
+    }
+
+    setAdminStatus("Đang tạo tài khoản...");
+
+    try {
+      const provisioningAuth = getProvisioningAuth();
+      const credential = await createUserWithEmailAndPassword(
+        provisioningAuth,
+        email,
+        password
+      );
+
+      await setDoc(doc(db, viewerCollection, credential.user.uid), {
+        email,
+        status: "approved",
+        createdAt: serverTimestamp(),
+        reviewedAt: serverTimestamp(),
+        reviewedBy: currentUser?.uid || "",
+      });
+
+      await signOut(provisioningAuth);
+
+      if (provisionEmail) provisionEmail.value = "";
+      if (provisionPassword) provisionPassword.value = "";
+      if (provisionConfirm) provisionConfirm.value = "";
+
+      setAdminStatus("Đã tạo và cấp quyền tài khoản.");
+      loadApprovalRequests();
+    } catch (error) {
+      const code = String(error?.code || "");
+      let message = "Không thể tạo tài khoản. Vui lòng thử lại.";
+
+      if (code.includes("auth/email-already-in-use")) {
+        message = "Email này đã tồn tại.";
+      } else if (code.includes("auth/invalid-email")) {
+        message = "Email không hợp lệ.";
+      } else if (code.includes("auth/weak-password")) {
+        message = "Mật khẩu quá yếu. Hãy chọn mật khẩu mạnh hơn.";
+      } else if (code.includes("auth/operation-not-allowed")) {
+        message = "Email/Password chưa được bật trong Firebase Auth.";
+      } else if (code.includes("auth/network-request-failed")) {
+        message = "Lỗi mạng khi tạo tài khoản. Vui lòng thử lại.";
+      }
+
+      setAdminStatus(message, true);
+    }
+  });
+}
+
+if (accountUpdate) {
+  accountUpdate.addEventListener("click", async () => {
+    if (!currentUser || !isAdminUser(currentUser)) {
+      setAdminStatus("Bạn không có quyền admin.", true);
+      return;
+    }
+
+    const email = String(accountEmail?.value || "").trim();
+    const password = String(accountPassword?.value || "");
+    const newEmail = String(accountNewEmail?.value || "").trim();
+    const newPassword = String(accountNewPassword?.value || "");
+    const confirm = String(accountNewConfirm?.value || "");
+
+    if (!email || !password) {
+      setAdminStatus("Vui lòng nhập email và mật khẩu hiện tại.", true);
+      return;
+    }
+
+    if (!newEmail && !newPassword) {
+      setAdminStatus("Hãy nhập email mới hoặc mật khẩu mới.", true);
+      return;
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      setAdminStatus("Mật khẩu mới phải có ít nhất 6 ký tự.", true);
+      return;
+    }
+
+    if (newPassword && newPassword !== confirm) {
+      setAdminStatus("Xác nhận mật khẩu mới không trùng khớp.", true);
+      return;
+    }
+
+    setAdminStatus("Đang cập nhật tài khoản...");
+
+    try {
+      const { provisioningAuth, user } = await signInProvisioningUser(
+        email,
+        password
+      );
+
+      if (newEmail && newEmail !== email) {
+        await updateEmail(user, newEmail);
+        await setDoc(
+          doc(db, viewerCollection, user.uid),
+          { email: newEmail },
+          { merge: true }
+        );
+      }
+
+      if (newPassword) {
+        await updatePassword(user, newPassword);
+      }
+
+      await signOut(provisioningAuth);
+
+      if (accountPassword) accountPassword.value = "";
+      if (accountNewPassword) accountNewPassword.value = "";
+      if (accountNewConfirm) accountNewConfirm.value = "";
+
+      setAdminStatus("Đã cập nhật tài khoản.");
+      loadApprovalRequests();
+    } catch (error) {
+      const code = String(error?.code || "");
+      let message = "Không thể cập nhật tài khoản. Vui lòng thử lại.";
+
+      if (code.includes("auth/user-not-found")) {
+        message = "Không tìm thấy tài khoản này.";
+      } else if (code.includes("auth/invalid-credential")) {
+        message = "Email hoặc mật khẩu hiện tại không đúng.";
+      } else if (code.includes("auth/wrong-password")) {
+        message = "Mật khẩu hiện tại không đúng.";
+      } else if (code.includes("auth/invalid-email")) {
+        message = "Email mới không hợp lệ.";
+      } else if (code.includes("auth/email-already-in-use")) {
+        message = "Email mới đã được sử dụng.";
+      } else if (code.includes("auth/weak-password")) {
+        message = "Mật khẩu mới quá yếu.";
+      } else if (code.includes("auth/operation-not-allowed")) {
+        message = "Email/Password chưa được bật trong Firebase Auth.";
+      } else if (code.includes("auth/network-request-failed")) {
+        message = "Lỗi mạng khi cập nhật. Vui lòng thử lại.";
+      }
+
+      setAdminStatus(message, true);
+    }
+  });
+}
+
+if (accountDelete) {
+  accountDelete.addEventListener("click", async () => {
+    if (!currentUser || !isAdminUser(currentUser)) {
+      setAdminStatus("Bạn không có quyền admin.", true);
+      return;
+    }
+
+    const email = String(accountEmail?.value || "").trim();
+    const password = String(accountPassword?.value || "");
+
+    if (!email || !password) {
+      setAdminStatus("Vui lòng nhập email và mật khẩu hiện tại.", true);
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      "Bạn chắc chắn muốn xóa tài khoản này? Hành động không thể hoàn tác."
+    );
+    if (!confirmDelete) return;
+
+    setAdminStatus("Đang xóa tài khoản...");
+
+    try {
+      const { provisioningAuth, user } = await signInProvisioningUser(
+        email,
+        password
+      );
+
+      await deleteUser(user);
+      await deleteDoc(doc(db, viewerCollection, user.uid));
+      await signOut(provisioningAuth);
+
+      if (accountEmail) accountEmail.value = "";
+      if (accountPassword) accountPassword.value = "";
+      if (accountNewEmail) accountNewEmail.value = "";
+      if (accountNewPassword) accountNewPassword.value = "";
+      if (accountNewConfirm) accountNewConfirm.value = "";
+
+      setAdminStatus("Đã xóa tài khoản.");
+      loadApprovalRequests();
+    } catch (error) {
+      const code = String(error?.code || "");
+      let message = "Không thể xóa tài khoản. Vui lòng thử lại.";
+
+      if (code.includes("auth/user-not-found")) {
+        message = "Không tìm thấy tài khoản này.";
+      } else if (code.includes("auth/invalid-credential")) {
+        message = "Email hoặc mật khẩu hiện tại không đúng.";
+      } else if (code.includes("auth/wrong-password")) {
+        message = "Mật khẩu hiện tại không đúng.";
+      } else if (code.includes("auth/operation-not-allowed")) {
+        message = "Email/Password chưa được bật trong Firebase Auth.";
+      } else if (code.includes("auth/network-request-failed")) {
+        message = "Lỗi mạng khi xóa tài khoản. Vui lòng thử lại.";
+      }
+
+      setAdminStatus(message, true);
+    }
+  });
 }
 
 if (authForm) {

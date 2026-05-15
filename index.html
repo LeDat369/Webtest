@@ -265,6 +265,69 @@
               <div class="approval-counts" data-approval-counts></div>
               <div class="approval-list" data-approval-list></div>
             </div>
+
+            <div class="admin-block" data-admin-provision>
+              <h3>Cấp phát tài khoản</h3>
+              <p class="admin-note">
+                Tạo một tài khoản dùng chung để nhiều người đăng nhập.
+              </p>
+              <div class="admin-grid">
+                <label>
+                  Email
+                  <input type="email" data-provision-email />
+                </label>
+                <label>
+                  Mật khẩu
+                  <input type="password" data-provision-password />
+                </label>
+                <label>
+                  Xác nhận mật khẩu
+                  <input type="password" data-provision-confirm />
+                </label>
+              </div>
+              <div class="admin-actions">
+                <button class="btn" type="button" data-provision-submit>
+                  Tạo tài khoản
+                </button>
+              </div>
+            </div>
+
+            <div class="admin-block" data-admin-account-update>
+              <h3>Cập nhật tài khoản dùng chung</h3>
+              <p class="admin-note">
+                Cần mật khẩu hiện tại của tài khoản để đổi email hoặc mật khẩu.
+              </p>
+              <div class="admin-grid">
+                <label>
+                  Email hiện tại
+                  <input type="email" data-account-email />
+                </label>
+                <label>
+                  Mật khẩu hiện tại
+                  <input type="password" data-account-password />
+                </label>
+                <label>
+                  Email mới (tuỳ chọn)
+                  <input type="email" data-account-new-email />
+                </label>
+                <label>
+                  Mật khẩu mới (tuỳ chọn)
+                  <input type="password" data-account-new-password />
+                </label>
+                <label>
+                  Xác nhận mật khẩu mới
+                  <input type="password" data-account-new-confirm />
+                </label>
+              </div>
+              <div class="admin-actions">
+                <button class="btn ghost" type="button" data-account-update>
+                  Cập nhật tài khoản
+                </button>
+                <button class="btn ghost" type="button" data-account-delete>
+                  Xóa tài khoản
+                </button>
+              </div>
+            </div>
           </form>
 
           <p class="admin-status" data-admin-status hidden></p>
