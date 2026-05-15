@@ -88,6 +88,7 @@ const membersRoot = document.querySelector("[data-members]");
 const timelineRoot = document.querySelector("[data-timeline]");
 const galleryRoot = document.querySelector("[data-gallery]");
 const contactLink = document.querySelector("[data-contact-email]");
+const pageSections = document.querySelectorAll("main .hero, main .section");
 
 let dataLoaded = false;
 let currentUser = null;
@@ -211,6 +212,24 @@ const setProtectedVisible = (isVisible) => {
       .querySelectorAll(".section, .hero, .site-footer")
       .forEach((section) => section.classList.add("in-view"));
   }
+};
+
+const getActiveSectionId = () => {
+  const hash = String(window.location.hash || "").replace("#", "");
+  return hash || "tong-quan";
+};
+
+const setActiveSection = (sectionId) => {
+  if (!pageSections.length) return;
+  const target = Array.from(pageSections).find(
+    (section) => section.id === sectionId
+  );
+  const active = target || Array.from(pageSections)[0];
+
+  pageSections.forEach((section) => {
+    section.classList.toggle("page-hidden", section !== active);
+  });
+  if (active) active.classList.add("in-view");
 };
 
 const setAuthGateVisible = (isVisible) => {
@@ -1369,3 +1388,8 @@ approvalFilters.forEach((button) => {
 
 setAuthMode("login");
 setApprovalFilter("pending");
+setActiveSection(getActiveSectionId());
+
+window.addEventListener("hashchange", () => {
+  setActiveSection(getActiveSectionId());
+});
