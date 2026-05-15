@@ -43,6 +43,7 @@ const sheetsEnabled = sheetsEndpoint && !sheetsEndpoint.startsWith("PASTE_");
 
 const adminUids = ["t7TsVaH42oWE6sgOgyzKQY3Pcr53"];
 const adminEmails = ["lvd02082003@gmail.com"];
+const sharedAccessEmails = ["levan@gmai.com"];
 
 const configMissing = Object.values(firebaseConfig).some((value) =>
   String(value).startsWith("PASTE_")
@@ -435,13 +436,33 @@ const saveSheetData = async (data) => {
 const ensureViewerRequest = async (user) => {
   const requestRef = doc(db, viewerCollection, user.uid);
   const snap = await getDoc(requestRef);
-  if (snap.exists()) return snap.data();
+  const email = String(user.email || "").toLowerCase();
+  const autoApprove = sharedAccessEmails.some(
+    (value) => value && value.toLowerCase() === email
+  );
+
+  if (snap.exists()) {
+    const data = snap.data();
+    if (autoApprove && data.status !== "approved") {
+      await updateDoc(requestRef, {
+        status: "approved",
+        reviewedAt: serverTimestamp(),
+        reviewedBy: "auto",
+      });
+      return { ...data, status: "approved" };
+    }
+    return data;
+  }
 
   const data = {
     email: user.email || "",
-    status: "pending",
+    status: autoApprove ? "approved" : "pending",
     createdAt: serverTimestamp(),
   };
+  if (autoApprove) {
+    data.reviewedAt = serverTimestamp();
+    data.reviewedBy = "auto";
+  }
   await setDoc(requestRef, data);
   return data;
 };
