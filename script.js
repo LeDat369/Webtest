@@ -279,6 +279,22 @@ const showAdmin = (isAdmin) => {
   if (!isAdmin) setAdminStatus("");
 };
 
+const withTimeout = (promise, ms, message) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(message || "TIMEOUT"));
+    }, ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+
 const buildSheetsUrl = () => {
   if (!sheetsEnabled) return "";
   const url = new URL(sheetsEndpoint);
@@ -1624,7 +1640,13 @@ onAuthStateChanged(auth, async (user) => {
 
     let approval = null;
     try {
-      approval = await checkViewerApproval(user);
+      setProtectedVisible(false);
+      setApprovalGateVisible(true, "Đang xác minh tài khoản...");
+      approval = await withTimeout(
+        checkViewerApproval(user),
+        8000,
+        "APPROVAL_TIMEOUT"
+      );
     } catch (error) {
       console.error("Approval check failed", error);
       setProtectedVisible(false);
