@@ -221,15 +221,20 @@ const getActiveSectionId = () => {
 
 const setActiveSection = (sectionId) => {
   if (!pageSections.length) return;
-  const target = Array.from(pageSections).find(
-    (section) => section.id === sectionId
-  );
-  const active = target || Array.from(pageSections)[0];
+  const sections = Array.from(pageSections);
+  const fallback = sections.find((section) => section.id === "tong-quan") || sections[0];
+  let target = sections.find((section) => section.id === sectionId) || fallback;
 
-  pageSections.forEach((section) => {
-    section.classList.toggle("page-hidden", section !== active);
+  if (target?.hasAttribute("data-admin") && target.hidden) {
+    target = fallback;
+  }
+
+  sections.forEach((section) => {
+    const isActive = section === target;
+    section.classList.toggle("page-hidden", !isActive);
+    section.style.display = isActive ? "" : "none";
+    if (isActive) section.classList.add("in-view");
   });
-  if (active) active.classList.add("in-view");
 };
 
 const setAuthGateVisible = (isVisible) => {
@@ -1345,6 +1350,7 @@ onAuthStateChanged(auth, async (user) => {
     const approval = await checkViewerApproval(user);
     if (approval.approved) {
       setProtectedVisible(true);
+      setActiveSection(getActiveSectionId());
       setApprovalGateVisible(false);
       startReveal();
 
