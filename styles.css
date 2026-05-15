@@ -1,10 +1,14 @@
 :root {
-  --bg: #f6f1e8;
-  --ink: #2b2b2b;
-  --accent: #b85c38;
-  --accent-dark: #7c3b24;
-  --paper: #fff9f2;
-  --shadow: 0 24px 60px rgba(43, 43, 43, 0.12);
+  --bg: #f4efe6;
+  --ink: #2b2825;
+  --accent: #b05a3c;
+  --accent-dark: #7b3a26;
+  --accent-soft: #f4d8c6;
+  --paper: #fff7ee;
+  --paper-deep: #f2e5d6;
+  --line: rgba(43, 40, 37, 0.16);
+  --shadow: 0 24px 60px rgba(43, 40, 37, 0.12);
+  --shadow-soft: 0 12px 30px rgba(43, 40, 37, 0.08);
 }
 
 * {
@@ -15,9 +19,20 @@
 
 body {
   font-family: "Source Sans 3", sans-serif;
-  background: radial-gradient(circle at top, #fff5e5 0%, var(--bg) 45%, #f4e7d2 100%);
+  background: radial-gradient(circle at top, #fff8ef 0%, var(--bg) 50%, #efe1cf 100%);
   color: var(--ink);
   line-height: 1.6;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(122, 90, 66, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: -1;
 }
 
 [hidden] {
@@ -42,13 +57,13 @@ a {
   top: 0;
   z-index: 10;
   backdrop-filter: blur(8px);
-  background: rgba(246, 241, 232, 0.85);
-  border-bottom: 1px solid rgba(43, 43, 43, 0.08);
+  background: rgba(244, 239, 230, 0.92);
+  border-bottom: 1px solid rgba(43, 40, 37, 0.08);
 }
 
 .brand {
   font-family: "Cormorant Garamond", serif;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: 2px;
 }
@@ -56,9 +71,9 @@ a {
 .site-nav {
   display: flex;
   gap: 24px;
-  font-size: 15px;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.6px;
 }
 
 .site-nav a {
@@ -97,10 +112,10 @@ a {
 
 .logout {
   background: transparent;
-  border: 1px solid rgba(43, 43, 43, 0.3);
+  border: 1px solid rgba(43, 40, 37, 0.3);
   padding: 8px 16px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
@@ -141,15 +156,15 @@ a {
 .auth-card label {
   display: grid;
   gap: 6px;
-  font-size: 14px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
 .auth-card input {
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(43, 43, 43, 0.2);
+  border: 1px solid rgba(43, 40, 37, 0.2);
   font-size: 15px;
 }
 
@@ -202,7 +217,7 @@ a {
 
 .kicker {
   text-transform: uppercase;
-  letter-spacing: 4px;
+  letter-spacing: 4.5px;
   font-size: 12px;
   margin-bottom: 16px;
 }
@@ -220,21 +235,21 @@ a {
 }
 
 .btn {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: #fff;
-  padding: 12px 24px;
+  padding: 12px 26px;
   border-radius: 999px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow);
-  transition: transform 0.3s ease, background 0.3s ease;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  background: var(--accent-dark);
+  box-shadow: var(--shadow);
 }
 
 .btn.ghost {
@@ -249,6 +264,7 @@ a {
   padding: 32px;
   border-radius: 24px;
   box-shadow: var(--shadow);
+  border: 1px solid rgba(176, 90, 60, 0.15);
 }
 
 .hero-card h2 {
@@ -279,18 +295,28 @@ a {
   font-size: clamp(28px, 4vw, 42px);
 }
 
+.section-title h2::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 3px;
+  margin-top: 12px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
 .tree-wrap {
   background: var(--paper);
   padding: 32px;
   border-radius: 24px;
   box-shadow: var(--shadow);
   overflow-x: auto;
+  border: 1px solid rgba(176, 90, 60, 0.12);
 }
 
 .tree {
   list-style: none;
   padding-left: 0;
-  --tree-line: rgba(43, 43, 43, 0.18);
+  --tree-line: rgba(43, 40, 37, 0.18);
 }
 
 .tree ul {
@@ -329,9 +355,9 @@ a {
   gap: 10px;
   padding: 10px 16px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(184, 92, 56, 0.16), rgba(255, 249, 242, 0.9));
-  border: 1px solid rgba(184, 92, 56, 0.25);
-  box-shadow: 0 10px 24px rgba(43, 43, 43, 0.08);
+  background: linear-gradient(135deg, rgba(176, 90, 60, 0.16), rgba(255, 249, 242, 0.9));
+  border: 1px solid rgba(176, 90, 60, 0.25);
+  box-shadow: 0 10px 24px rgba(43, 40, 37, 0.08);
   font-weight: 600;
 }
 
@@ -355,6 +381,7 @@ a {
   background: var(--paper);
   border-radius: 20px;
   box-shadow: var(--shadow);
+  border: 1px solid rgba(176, 90, 60, 0.12);
 }
 
 .card h3 {
@@ -386,7 +413,7 @@ a {
   background: var(--paper);
   padding: 18px 22px;
   border-radius: 16px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-soft);
   display: flex;
   gap: 18px;
   align-items: center;
@@ -405,7 +432,7 @@ a {
 }
 
 .photo {
-  background: linear-gradient(135deg, rgba(184, 92, 56, 0.18), rgba(255, 249, 242, 0.8));
+  background: linear-gradient(135deg, rgba(176, 90, 60, 0.18), rgba(255, 249, 242, 0.8));
   border-radius: 18px;
   min-height: 160px;
   display: flex;
@@ -424,6 +451,7 @@ a {
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
+  border: 1px solid rgba(176, 90, 60, 0.12);
 }
 
 .admin-panel .admin-card {
@@ -433,6 +461,7 @@ a {
   box-shadow: var(--shadow);
   display: grid;
   gap: 16px;
+  border: 1px solid rgba(176, 90, 60, 0.12);
 }
 
 .admin-actions {
@@ -455,15 +484,15 @@ a {
 .admin-form label {
   display: grid;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.4px;
 }
 
 .admin-form input {
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(43, 43, 43, 0.2);
+  border: 1px solid rgba(43, 40, 37, 0.2);
   font-size: 14px;
 }
 
@@ -510,7 +539,7 @@ a {
   align-items: center;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(43, 43, 43, 0.15);
+  border: 1px solid rgba(43, 40, 37, 0.15);
   background: #fff;
 }
 
@@ -526,7 +555,7 @@ a {
 
 .tree-node-handle {
   padding: 6px 10px;
-  border: 1px dashed rgba(43, 43, 43, 0.3);
+  border: 1px dashed rgba(43, 40, 37, 0.3);
   border-radius: 999px;
   font-size: 12px;
   text-transform: uppercase;
@@ -539,7 +568,7 @@ a {
   flex: 1 1 200px;
   min-width: 160px;
   border-radius: 10px;
-  border: 1px solid rgba(43, 43, 43, 0.2);
+  border: 1px solid rgba(43, 40, 37, 0.2);
   padding: 8px 10px;
   font-size: 14px;
 }
@@ -552,7 +581,7 @@ a {
 
 .tree-node-btn {
   background: transparent;
-  border: 1px solid rgba(43, 43, 43, 0.3);
+  border: 1px solid rgba(43, 40, 37, 0.3);
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -581,22 +610,22 @@ a {
   padding: 16px;
   border-radius: 16px;
   background: #fff;
-  border: 1px solid rgba(43, 43, 43, 0.1);
+  border: 1px solid rgba(43, 40, 37, 0.1);
 }
 
 .admin-item label {
   display: grid;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.4px;
 }
 
 .admin-item input,
 .admin-item textarea {
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(43, 43, 43, 0.2);
+  border: 1px solid rgba(43, 40, 37, 0.2);
   font-size: 14px;
   font-family: "Source Sans 3", sans-serif;
 }
@@ -613,7 +642,7 @@ a {
 
 .admin-remove {
   background: transparent;
-  border: 1px solid rgba(43, 43, 43, 0.3);
+  border: 1px solid rgba(43, 40, 37, 0.3);
   color: var(--accent-dark);
   padding: 6px 12px;
   border-radius: 999px;
@@ -663,7 +692,7 @@ a {
 
 .approval-item {
   background: #fff;
-  border: 1px solid rgba(43, 43, 43, 0.1);
+  border: 1px solid rgba(43, 40, 37, 0.1);
   border-radius: 16px;
   padding: 14px 16px;
   display: flex;
@@ -694,7 +723,7 @@ a {
   letter-spacing: 1px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(43, 43, 43, 0.08);
+  background: rgba(43, 40, 37, 0.08);
 }
 
 .approval-status[data-status="approved"] {
@@ -738,6 +767,18 @@ a {
 .site-footer.in-view {
   opacity: 1;
   transform: translateY(0);
+  animation: floatIn 0.7s ease both;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 900px) {
