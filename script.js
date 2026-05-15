@@ -206,6 +206,11 @@ const setProtectedVisible = (isVisible) => {
   protectedEls.forEach((el) => {
     el.hidden = !isVisible;
   });
+  if (isVisible) {
+    document
+      .querySelectorAll(".section, .hero, .site-footer")
+      .forEach((section) => section.classList.add("in-view"));
+  }
 };
 
 const setAuthGateVisible = (isVisible) => {
