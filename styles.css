@@ -22,6 +22,9 @@ body {
   background: radial-gradient(circle at top, #fff8ef 0%, var(--bg) 50%, #efe1cf 100%);
   color: var(--ink);
   line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 body::before {
@@ -198,6 +201,10 @@ a {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 100px);
+}
+
+.app-content {
+  flex: 1;
 }
 
 .hero {
@@ -752,6 +759,7 @@ a {
   text-align: center;
   font-size: 14px;
   color: rgba(43, 43, 43, 0.7);
+  margin-top: auto;
 }
 
 .section,
