@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gia pha toc DAT369</title>
+    <title>Gia phả tộc DAT369</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,14 +16,14 @@
     <header class="site-header">
       <div class="brand">DAT369</div>
       <nav class="site-nav" data-nav>
-        <a href="#tong-quan">Tong quan</a>
-        <a href="#so-do">So do gia pha</a>
-        <a href="#nhan-vat">Nhan vat</a>
-        <a href="#moc-thoi-gian">Moc thoi gian</a>
-        <a href="#anh">Anh tu lieu</a>
-        <a href="#quan-tri" data-admin hidden>Quan tri</a>
+        <a href="#tong-quan">Tổng quan</a>
+        <a href="#so-do">Sơ đồ gia phả</a>
+        <a href="#nhan-vat">Nhân vật</a>
+        <a href="#moc-thoi-gian">Mốc thời gian</a>
+        <a href="#anh">Ảnh tư liệu</a>
+        <a href="#quan-tri" data-admin hidden>Quản trị</a>
       </nav>
-      <button class="logout" type="button" data-logout hidden>Dang xuat</button>
+      <button class="logout" type="button" data-logout hidden>Đăng xuất</button>
       <button class="nav-toggle" type="button" aria-label="Mo menu" data-nav-toggle>
         <span></span>
         <span></span>
@@ -32,26 +32,26 @@
 
     <section class="auth-gate" id="auth-gate">
       <div class="auth-card">
-        <h2 data-auth-title>Dang nhap</h2>
-        <p class="auth-hint">Website chi hien noi dung sau khi dang nhap.</p>
+        <h2 data-auth-title>Đăng nhập</h2>
+        <p class="auth-hint">Website chỉ hiển thị nội dung sau khi đăng nhập.</p>
         <form data-auth-form>
           <label>
             Email
             <input type="email" name="email" required autocomplete="username" />
           </label>
           <label>
-            Mat khau
+            Mật khẩu
             <input type="password" name="password" required autocomplete="current-password" />
           </label>
           <label data-auth-confirm hidden>
-            Xac nhan mat khau
+            Xác nhận mật khẩu
             <input type="password" name="confirm" autocomplete="new-password" />
           </label>
-          <button class="btn" type="submit" data-auth-submit>Dang nhap</button>
+          <button class="btn" type="submit" data-auth-submit>Đăng nhập</button>
         </form>
         <p class="auth-switch">
-          <span data-auth-switch-text>Chua co tai khoan?</span>
-          <button class="link-button" type="button" data-auth-toggle>Dang ky</button>
+          <span data-auth-switch-text>Chưa có tài khoản?</span>
+          <button class="link-button" type="button" data-auth-toggle>Đăng ký</button>
         </p>
         <p class="auth-error" data-auth-error hidden></p>
       </div>
@@ -59,9 +59,9 @@
 
     <section class="approval-gate" data-approval-gate hidden>
       <div class="auth-card">
-        <h2>Cho phe duyet</h2>
+        <h2>Chờ phê duyệt</h2>
         <p class="auth-hint" data-approval-message>
-          Tai khoan cua ban dang cho admin phe duyet.
+          Tài khoản của bạn đang chờ admin phê duyệt.
         </p>
       </div>
     </section>
@@ -69,32 +69,32 @@
     <main id="app-content" class="app-content" data-protected hidden>
       <section class="hero" id="tong-quan">
         <div class="hero-content">
-          <p class="kicker">Gia pha truyen thua</p>
-          <h1 data-hero-title>Gia pha toc DAT369</h1>
+          <p class="kicker">Gia phả truyền thừa</p>
+          <h1 data-hero-title>Gia phả tộc DAT369</h1>
           <p class="lead">
-            Mot khong gian ghi lai lich su gia toc, noi ket noi cac the he va luu giu ky
-            uc.
+            Một không gian ghi lại lịch sử gia tộc, nơi kết nối các thế hệ và lưu giữ
+            ký ức.
           </p>
           <div class="hero-actions">
-            <a class="btn" href="#so-do">Xem so do</a>
-            <a class="btn ghost" href="#nhan-vat">Nhan vat tieu bieu</a>
+            <a class="btn" href="#so-do">Xem sơ đồ</a>
+            <a class="btn ghost" href="#nhan-vat">Nhân vật tiêu biểu</a>
           </div>
         </div>
         <div class="hero-card">
-          <h2>Thong tin tong quan</h2>
+          <h2>Thông tin tổng quan</h2>
           <ul>
-            <li><strong>Dong ho:</strong> <span data-overview="clan">Dang tai...</span></li>
-            <li><strong>Que quan:</strong> <span data-overview="homeland">Dang tai...</span></li>
-            <li><strong>Gia quy:</strong> <span data-overview="motto">Dang tai...</span></li>
-            <li><strong>So the he:</strong> <span data-overview="generations">Dang tai...</span></li>
+            <li><strong>Dòng họ:</strong> <span data-overview="clan">Đang tải...</span></li>
+            <li><strong>Quê quán:</strong> <span data-overview="homeland">Đang tải...</span></li>
+            <li><strong>Gia quy:</strong> <span data-overview="motto">Đang tải...</span></li>
+            <li><strong>Số thế hệ:</strong> <span data-overview="generations">Đang tải...</span></li>
           </ul>
         </div>
       </section>
 
       <section class="section" id="so-do">
         <div class="section-title">
-          <h2>So do gia pha co ban</h2>
-          <p>Chinh sua lai ten va nam sinh theo ho so gia dinh.</p>
+          <h2>Sơ đồ gia phả cơ bản</h2>
+          <p>Chỉnh sửa lại tên và năm sinh theo hồ sơ gia đình.</p>
         </div>
         <div class="tree-wrap">
           <ul class="tree" data-tree></ul>
@@ -103,78 +103,78 @@
 
       <section class="section" id="nhan-vat">
         <div class="section-title">
-          <h2>Nhan vat tieu bieu</h2>
-          <p>Ghi nhanh cong lao va ky niem dang nho.</p>
+          <h2>Nhân vật tiêu biểu</h2>
+          <p>Ghi nhanh công lao và kỷ niệm đáng nhớ.</p>
         </div>
         <div class="grid" data-members></div>
       </section>
 
       <section class="section" id="moc-thoi-gian">
         <div class="section-title">
-          <h2>Moc thoi gian</h2>
-          <p>Ghi lai cac su kien lon cua gia toc.</p>
+          <h2>Mốc thời gian</h2>
+          <p>Ghi lại các sự kiện lớn của gia tộc.</p>
         </div>
         <div class="timeline" data-timeline></div>
       </section>
 
       <section class="section" id="anh">
         <div class="section-title">
-          <h2>Anh tu lieu</h2>
-          <p>Cho bo sung anh chan dung, nha tu duong, hoat dong ho hang.</p>
+          <h2>Ảnh tư liệu</h2>
+          <p>Chờ bổ sung ảnh chân dung, nhà từ đường, hoạt động họ hàng.</p>
         </div>
         <div class="gallery" data-gallery></div>
       </section>
 
       <section class="section" id="dong-gop">
         <div class="section-title">
-          <h2>Dong gop thong tin</h2>
-          <p>Moi nguoi co the bo sung du lieu va tai lieu.</p>
+          <h2>Đóng góp thông tin</h2>
+          <p>Mọi người có thể bổ sung dữ liệu và tài liệu.</p>
         </div>
         <div class="cta">
           <div>
-            <h3>Ban co the bo sung ngay</h3>
+            <h3>Bạn có thể bổ sung ngay</h3>
             <p>
-              Gui thong tin ve ngay sinh, hinh anh, va ky niem cho ban quan tri gia
-              pha.
+              Gửi thông tin về ngày sinh, hình ảnh, và kỷ niệm cho ban quản trị gia
+              phả.
             </p>
           </div>
-          <a class="btn" href="#" data-contact-email>Lien he</a>
+          <a class="btn" href="#" data-contact-email>Liên hệ</a>
         </div>
       </section>
 
       <section class="section admin-panel" id="quan-tri" data-admin hidden>
         <div class="section-title">
-          <h2>Quan tri du lieu</h2>
-          <p>Chi admin moi co quyen cap nhat du lieu gia pha.</p>
+          <h2>Quản trị dữ liệu</h2>
+          <p>Chỉ admin mới có quyền cập nhật dữ liệu gia phả.</p>
         </div>
         <div class="admin-card">
           <div class="admin-actions">
-            <button class="btn ghost" type="button" data-admin-load>Tai du lieu</button>
+            <button class="btn ghost" type="button" data-admin-load>Tải dữ liệu</button>
             <button class="btn ghost" type="button" data-admin-sample>
-              Tai du lieu mau
+              Tải dữ liệu mẫu
             </button>
             <a
               class="btn ghost"
               href="https://docs.google.com/spreadsheets/d/19Dqdmw6UVu6dP7qSkJYUVYbXo_Jjly6G4hctyZS3afo/edit?pli=1&gid=0#gid=0"
               target="_blank"
               rel="noopener"
-              >Mo Google Sheet</a
+              >Mở Google Sheet</a
             >
-            <button class="btn" type="button" data-admin-save>Luu thay doi</button>
+            <button class="btn" type="button" data-admin-save>Lưu thay đổi</button>
           </div>
 
           <form class="admin-form" data-admin-form>
             <div class="admin-grid">
               <label>
-                Tieu de
+                Tiêu đề
                 <input type="text" data-field="overview.title" />
               </label>
               <label>
-                Dong ho
+                Dòng họ
                 <input type="text" data-field="overview.clan" />
               </label>
               <label>
-                Que quan
+                Quê quán
                 <input type="text" data-field="overview.homeland" />
               </label>
               <label>
@@ -182,59 +182,59 @@
                 <input type="text" data-field="overview.motto" />
               </label>
               <label>
-                So the he
+                Số thế hệ
                 <input type="text" data-field="overview.generations" />
               </label>
               <label>
-                Email lien he
+                Email liên hệ
                 <input type="email" data-field="contactEmail" />
               </label>
             </div>
 
             <div class="admin-block">
-              <h3>Nhan vat tieu bieu</h3>
+              <h3>Nhân vật tiêu biểu</h3>
               <div class="admin-list" data-list="members"></div>
               <button class="btn ghost" type="button" data-admin-add="members">
-                Them nhan vat
+                Thêm nhân vật
               </button>
             </div>
 
             <div class="admin-block">
-              <h3>Moc thoi gian</h3>
+              <h3>Mốc thời gian</h3>
               <div class="admin-list" data-list="timeline"></div>
               <button class="btn ghost" type="button" data-admin-add="timeline">
-                Them moc thoi gian
+                Thêm mốc thời gian
               </button>
             </div>
 
             <div class="admin-block">
-              <h3>Thu vien anh</h3>
+              <h3>Thư viện ảnh</h3>
               <div class="admin-list" data-list="gallery"></div>
               <button class="btn ghost" type="button" data-admin-add="gallery">
-                Them anh
+                Thêm ảnh
               </button>
             </div>
 
             <div class="admin-block">
-              <h3>So do gia pha</h3>
+              <h3>Sơ đồ gia phả</h3>
               <div class="tree-editor">
                 <div class="tree-editor-actions">
                   <button class="btn ghost" type="button" data-tree-add-root>
-                    Them nut goc
+                    Thêm nút gốc
                   </button>
                 </div>
                 <ul class="tree-editor-root" data-tree-editor></ul>
                 <p class="admin-note">
-                  Keo-tha nut vao nhau de doi cap bac. Dung "Them con" de tao nhanh
-                  moi.
+                  Kéo-thả nút vào nhau để đổi cấp bậc. Dùng "Thêm con" để tạo nhánh
+                  mới.
                 </p>
               </div>
             </div>
 
             <div class="admin-block" data-admin-approvals>
-              <h3>Quan ly tai khoan</h3>
+              <h3>Quản lý tài khoản</h3>
               <p class="admin-note">
-                Admin phe duyet, thu hoi va quan ly nguoi xem.
+                Admin phê duyệt, thu hồi và quản lý người xem.
               </p>
               <div class="admin-actions">
                 <button
@@ -242,24 +242,24 @@
                   type="button"
                   data-approval-filter="pending"
                 >
-                  Cho duyet
+                  Chờ duyệt
                 </button>
                 <button
                   class="btn ghost"
                   type="button"
                   data-approval-filter="approved"
                 >
-                  Da duyet
+                  Đã duyệt
                 </button>
                 <button
                   class="btn ghost"
                   type="button"
                   data-approval-filter="rejected"
                 >
-                  Tu choi
+                  Từ chối
                 </button>
                 <button class="btn ghost" type="button" data-approval-refresh>
-                  Lam moi
+                  Làm mới
                 </button>
               </div>
               <div class="approval-counts" data-approval-counts></div>
@@ -273,7 +273,7 @@
     </main>
 
     <footer class="site-footer" data-protected hidden>
-      <p>© 2026 Gia pha DAT369. Luu tru va chia se truyen thong gia toc.</p>
+      <p>© 2026 Gia phả DAT369. Lưu trữ và chia sẻ truyền thống gia tộc.</p>
     </footer>
 
     <script type="module" src="script.js"></script>

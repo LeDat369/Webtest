@@ -105,23 +105,23 @@ const viewerCollection = "viewerRequests";
 const listConfigs = {
   members: {
     fields: [
-      { name: "name", label: "Ten", type: "text" },
-      { name: "role", label: "Vai tro", type: "text" },
-      { name: "birthYear", label: "Nam sinh", type: "text" },
-      { name: "deathYear", label: "Nam mat", type: "text" },
-      { name: "bio", label: "Ghi chu", type: "textarea" },
+      { name: "name", label: "Tên", type: "text" },
+      { name: "role", label: "Vai trò", type: "text" },
+      { name: "birthYear", label: "Năm sinh", type: "text" },
+      { name: "deathYear", label: "Năm mất", type: "text" },
+      { name: "bio", label: "Ghi chú", type: "textarea" },
     ],
   },
   timeline: {
     fields: [
-      { name: "year", label: "Nam", type: "text" },
-      { name: "text", label: "Noi dung", type: "textarea" },
+      { name: "year", label: "Năm", type: "text" },
+      { name: "text", label: "Nội dung", type: "textarea" },
     ],
   },
   gallery: {
     fields: [
-      { name: "label", label: "Nhan", type: "text" },
-      { name: "url", label: "URL anh", type: "text" },
+      { name: "label", label: "Nhãn", type: "text" },
+      { name: "url", label: "URL ảnh", type: "text" },
     ],
   },
 };
@@ -140,12 +140,12 @@ const clearAuthError = () => {
 
 const setAuthMode = (mode) => {
   authMode = mode;
-  if (authTitle) authTitle.textContent = mode === "login" ? "Dang nhap" : "Dang ky";
-  if (authSubmit) authSubmit.textContent = mode === "login" ? "Dang nhap" : "Dang ky";
+  if (authTitle) authTitle.textContent = mode === "login" ? "Đăng nhập" : "Đăng ký";
+  if (authSubmit) authSubmit.textContent = mode === "login" ? "Đăng nhập" : "Đăng ký";
   if (authSwitchText)
     authSwitchText.textContent =
-      mode === "login" ? "Chua co tai khoan?" : "Da co tai khoan?";
-  if (authToggle) authToggle.textContent = mode === "login" ? "Dang ky" : "Dang nhap";
+      mode === "login" ? "Chưa có tài khoản?" : "Đã có tài khoản?";
+  if (authToggle) authToggle.textContent = mode === "login" ? "Đăng ký" : "Đăng nhập";
   if (authConfirm) authConfirm.hidden = mode !== "register";
 };
 
@@ -175,14 +175,14 @@ const scheduleAutoSave = () => {
   autoSaveTimer = setTimeout(async () => {
     if (autoSaveRunning) return;
     autoSaveRunning = true;
-    setAdminStatus("Dang dong bo len Google Sheets...");
+    setAdminStatus("Đang đồng bộ lên Google Sheets...");
 
     try {
       const data = collectAdminFormData();
       await saveFamilyData(data);
-      setAdminStatus("Da dong bo Google Sheets.");
+      setAdminStatus("Đã đồng bộ Google Sheets.");
     } catch (error) {
-      setAdminStatus("Khong the dong bo Google Sheets.", true);
+      setAdminStatus("Không thể đồng bộ Google Sheets.", true);
     } finally {
       autoSaveRunning = false;
     }
@@ -220,7 +220,7 @@ const setApprovalGateVisible = (isVisible, message) => {
   if (approvalGate) approvalGate.hidden = !isVisible;
   if (approvalMessage) {
     approvalMessage.textContent =
-      message || "Tai khoan cua ban dang cho admin phe duyet.";
+      message || "Tài khoản của bạn đang chờ admin phê duyệt.";
   }
 };
 
@@ -288,7 +288,7 @@ const buildTreeFromRows = (rows = []) => {
 
   const stripNode = (node) => ({
     id: node.id,
-    label: node.label || "Khong ten",
+    label: node.label || "Không tên",
     children: node.children.map(stripNode),
   });
 
@@ -374,6 +374,17 @@ const checkViewerApproval = async (user) => {
   return { approved, status };
 };
 
+const getApprovalLabel = (status) => {
+  switch (status) {
+    case "approved":
+      return "Đã duyệt";
+    case "rejected":
+      return "Từ chối";
+    default:
+      return "Chờ duyệt";
+  }
+};
+
 const formatApprovalCounts = (items) => {
   if (!approvalCounts) return;
   const counts = items.reduce(
@@ -387,7 +398,7 @@ const formatApprovalCounts = (items) => {
     { pending: 0, approved: 0, rejected: 0 }
   );
 
-  approvalCounts.textContent = `Cho duyet: ${counts.pending} | Da duyet: ${counts.approved} | Tu choi: ${counts.rejected}`;
+  approvalCounts.textContent = `Chờ duyệt: ${counts.pending} | Đã duyệt: ${counts.approved} | Từ chối: ${counts.rejected}`;
 };
 
 const setApprovalFilter = (value) => {
@@ -410,7 +421,7 @@ const updateApprovalStatus = async (id, status) => {
     });
     loadApprovalRequests();
   } catch (error) {
-    setAdminStatus("Khong the cap nhat trang thai tai khoan.", true);
+    setAdminStatus("Không thể cập nhật trạng thái tài khoản.", true);
   }
 };
 
@@ -424,7 +435,7 @@ const renderApprovalList = (items) => {
   if (filtered.length === 0) {
     const empty = document.createElement("p");
     empty.className = "admin-note";
-    empty.textContent = "Khong co tai khoan trong muc nay.";
+    empty.textContent = "Không có tài khoản trong mục này.";
     approvalList.appendChild(empty);
     return;
   }
@@ -437,7 +448,7 @@ const renderApprovalList = (items) => {
     meta.className = "approval-meta";
 
     const email = document.createElement("strong");
-    email.textContent = item.email || "(khong co email)";
+    email.textContent = item.email || "(không có email)";
 
     const uid = document.createElement("span");
     uid.textContent = `UID: ${item.id}`;
@@ -445,7 +456,7 @@ const renderApprovalList = (items) => {
     const status = document.createElement("span");
     status.className = "approval-status";
     status.setAttribute("data-status", item.status || "pending");
-    status.textContent = item.status || "pending";
+    status.textContent = getApprovalLabel(item.status || "pending");
 
     meta.append(email, uid, status);
 
@@ -456,27 +467,27 @@ const renderApprovalList = (items) => {
       const revoke = document.createElement("button");
       revoke.type = "button";
       revoke.className = "tree-node-btn";
-      revoke.textContent = "Thu hoi";
+      revoke.textContent = "Thu hồi";
       revoke.addEventListener("click", () => updateApprovalStatus(item.id, "rejected"));
       actions.appendChild(revoke);
     } else if (item.status === "rejected") {
       const reapprove = document.createElement("button");
       reapprove.type = "button";
       reapprove.className = "tree-node-btn";
-      reapprove.textContent = "Duyet lai";
+      reapprove.textContent = "Duyệt lại";
       reapprove.addEventListener("click", () => updateApprovalStatus(item.id, "approved"));
       actions.appendChild(reapprove);
     } else {
       const approve = document.createElement("button");
       approve.type = "button";
       approve.className = "tree-node-btn";
-      approve.textContent = "Duyet";
+      approve.textContent = "Duyệt";
       approve.addEventListener("click", () => updateApprovalStatus(item.id, "approved"));
 
       const reject = document.createElement("button");
       reject.type = "button";
       reject.className = "tree-node-btn";
-      reject.textContent = "Tu choi";
+      reject.textContent = "Từ chối";
       reject.addEventListener("click", () => updateApprovalStatus(item.id, "rejected"));
 
       actions.append(approve, reject);
@@ -500,17 +511,17 @@ const loadApprovalRequests = async () => {
     formatApprovalCounts(items);
     renderApprovalList(items);
   } catch (error) {
-    setAdminStatus("Khong the tai danh sach duyet.", true);
+    setAdminStatus("Không thể tải danh sách duyệt.", true);
   }
 };
 
 const getEmptyFamilyData = () => ({
   overview: {
-    title: "Gia pha toc DAT369",
-    clan: "Chua co du lieu",
-    homeland: "Chua co du lieu",
-    motto: "Chua co du lieu",
-    generations: "Chua co du lieu",
+    title: "Gia phả tộc DAT369",
+    clan: "Chưa có dữ liệu",
+    homeland: "Chưa có dữ liệu",
+    motto: "Chưa có dữ liệu",
+    generations: "Chưa có dữ liệu",
   },
   tree: [],
   members: [],
@@ -521,77 +532,77 @@ const getEmptyFamilyData = () => ({
 
 const getSampleFamilyData = () => ({
   overview: {
-    title: "Gia pha toc DAT369",
+    title: "Gia phả tộc DAT369",
     clan: "Nguyen",
-    homeland: "Nam Bo",
-    motto: "Trong nghia, giu tin, yeu thuong",
-    generations: "4 the he",
+    homeland: "Nam Bộ",
+    motto: "Trong nghĩa, giữ tín, yêu thương",
+    generations: "4 thế hệ",
   },
   contactEmail: "dat369@example.com",
   tree: [
     {
       id: "A1",
-      label: "Cu to: Nguyen Van A (1890 - 1970)",
+      label: "Cụ tổ: Nguyễn Văn A (1890 - 1970)",
       children: [
         {
           id: "B1",
-          label: "Ong to: Nguyen Van B (1915 - 1990)",
+          label: "Ông tổ: Nguyễn Văn B (1915 - 1990)",
           children: [
             {
               id: "C1",
-              label: "Cha: Nguyen Van C (1940 - 2010)",
+              label: "Cha: Nguyễn Văn C (1940 - 2010)",
               children: [
-                { id: "D1", label: "Con: Nguyen Van D (1965 - )" },
-                { id: "D2", label: "Con: Nguyen Van E (1968 - )" },
+                { id: "D1", label: "Con: Nguyễn Văn D (1965 - )" },
+                { id: "D2", label: "Con: Nguyễn Văn E (1968 - )" },
               ],
             },
             {
               id: "C2",
-              label: "Co: Nguyen Thi F (1943 - )",
-              children: [{ id: "D3", label: "Con: Nguyen Thi G (1970 - )" }],
+              label: "Cô: Nguyễn Thị F (1943 - )",
+              children: [{ id: "D3", label: "Con: Nguyễn Thị G (1970 - )" }],
             },
           ],
         },
         {
           id: "B2",
-          label: "Ong to: Nguyen Van H (1920 - 2005)",
-          children: [{ id: "C3", label: "Cha: Nguyen Van I (1950 - )" }],
+          label: "Ông tổ: Nguyễn Văn H (1920 - 2005)",
+          children: [{ id: "C3", label: "Cha: Nguyễn Văn I (1950 - )" }],
         },
       ],
     },
   ],
   members: [
     {
-      name: "Nguyen Van A",
-      role: "Cu to",
+      name: "Nguyễn Văn A",
+      role: "Cụ tổ",
       birthYear: "1890",
       deathYear: "1970",
-      bio: "Lap nghiep, xay dung nen nep nha, khoi dau phat trien dong ho.",
+      bio: "Lập nghiệp, xây dựng nền nếp nhà, khởi đầu phát triển dòng họ.",
     },
     {
-      name: "Nguyen Van B",
-      role: "Ong to",
+      name: "Nguyễn Văn B",
+      role: "Ông tổ",
       birthYear: "1915",
       deathYear: "1990",
-      bio: "Giu gia phong, day con chau nen nguoi.",
+      bio: "Giữ gia phong, dạy con cháu nên người.",
     },
     {
-      name: "Nguyen Thi F",
-      role: "Co",
+      name: "Nguyễn Thị F",
+      role: "Cô",
       birthYear: "1943",
-      bio: "Quan ly viec nha va giu ket noi cac nhanh ho.",
+      bio: "Quản lý việc nhà và giữ kết nối các nhánh họ.",
     },
   ],
   timeline: [
-    { year: "1890", text: "Cu to Nguyen Van A chao doi." },
-    { year: "1938", text: "Gia toc chuyen den vung dinh cu hien nay." },
-    { year: "1975", text: "Hoan thanh nha tu duong dau tien." },
-    { year: "2026", text: "Hoan thien website gia pha DAT369." },
+    { year: "1890", text: "Cụ tổ Nguyễn Văn A chào đời." },
+    { year: "1938", text: "Gia tộc chuyển đến vùng định cư hiện nay." },
+    { year: "1975", text: "Hoàn thành nhà từ đường đầu tiên." },
+    { year: "2026", text: "Hoàn thiện website gia phả DAT369." },
   ],
   gallery: [
-    { label: "Anh tuong nho", url: "" },
-    { label: "Nha tu duong", url: "" },
-    { label: "Hoat dong ho hang", url: "" },
+    { label: "Ảnh tưởng nhớ", url: "" },
+    { label: "Nhà từ đường", url: "" },
+    { label: "Hoạt động họ hàng", url: "" },
   ],
 });
 
@@ -626,7 +637,7 @@ const createTreeNode = (label = "", persistId = "") => {
   const input = document.createElement("input");
   input.type = "text";
   input.className = "tree-node-input";
-  input.placeholder = "Nhan nut";
+  input.placeholder = "Nhãn nút";
   input.value = label;
   input.addEventListener("input", () => scheduleAutoSave());
 
@@ -636,22 +647,22 @@ const createTreeNode = (label = "", persistId = "") => {
   const addChild = document.createElement("button");
   addChild.type = "button";
   addChild.className = "tree-node-btn";
-  addChild.textContent = "Them con";
+  addChild.textContent = "Thêm con";
 
   const moveUp = document.createElement("button");
   moveUp.type = "button";
   moveUp.className = "tree-node-btn";
-  moveUp.textContent = "Len";
+  moveUp.textContent = "Lên";
 
   const moveDown = document.createElement("button");
   moveDown.type = "button";
   moveDown.className = "tree-node-btn";
-  moveDown.textContent = "Xuong";
+  moveDown.textContent = "Xuống";
 
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "tree-node-btn";
-  remove.textContent = "Xoa";
+  remove.textContent = "Xóa";
 
   actions.append(addChild, moveUp, moveDown, remove);
   row.append(handle, input, actions);
@@ -780,7 +791,7 @@ const serializeTreeNode = (node) => {
 
   return {
     id: persistId || "",
-    label: label || "Khong ten",
+    label: label || "Không tên",
     children,
   };
 };
@@ -830,7 +841,7 @@ const createListItem = (key, values = {}) => {
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "admin-remove";
-  remove.textContent = "Xoa";
+  remove.textContent = "Xóa";
   remove.addEventListener("click", () => {
     item.remove();
     scheduleAutoSave();
@@ -906,7 +917,7 @@ const populateAdminForm = (data) => {
 const collectAdminFormData = () => {
   return {
     overview: {
-      title: getAdminField("overview.title") || "Gia pha toc DAT369",
+      title: getAdminField("overview.title") || "Gia phả tộc DAT369",
       clan: getAdminField("overview.clan"),
       homeland: getAdminField("overview.homeland"),
       motto: getAdminField("overview.motto"),
@@ -989,7 +1000,7 @@ const renderGallery = (items) => {
   items.forEach((item) => {
     const tile = document.createElement("div");
     tile.className = "photo";
-    tile.textContent = item.label || "Anh";
+    tile.textContent = item.label || "Ảnh";
 
     if (item.url) {
       tile.style.backgroundImage = `url(${item.url})`;
@@ -1039,10 +1050,10 @@ const renderContent = (data) => {
     const email = data.contactEmail || "";
     if (email) {
       contactLink.href = `mailto:${email}`;
-      contactLink.textContent = "Lien he";
+      contactLink.textContent = "Liên hệ";
     } else {
       contactLink.href = "#";
-      contactLink.textContent = "Cap nhat lien he";
+      contactLink.textContent = "Cập nhật liên hệ";
     }
   }
 };
@@ -1153,18 +1164,18 @@ if (authToggle) {
 if (adminLoadButton) {
   adminLoadButton.addEventListener("click", async () => {
     if (!currentUser || !isAdminUser(currentUser)) {
-      setAdminStatus("Ban khong co quyen admin.", true);
+      setAdminStatus("Bạn không có quyền admin.", true);
       return;
     }
 
-    setAdminStatus("Dang tai du lieu...");
+    setAdminStatus("Đang tải dữ liệu...");
 
     try {
       const data = await loadFamilyData();
       populateAdminForm(data);
-      setAdminStatus("Da tai du lieu.");
+      setAdminStatus("Đã tải dữ liệu.");
     } catch (error) {
-      setAdminStatus("Khong the tai du lieu. Vui long thu lai.", true);
+      setAdminStatus("Không thể tải dữ liệu. Vui lòng thử lại.", true);
     }
   });
 }
@@ -1172,14 +1183,14 @@ if (adminLoadButton) {
 if (adminSampleButton) {
   adminSampleButton.addEventListener("click", () => {
     if (!currentUser || !isAdminUser(currentUser)) {
-      setAdminStatus("Ban khong co quyen admin.", true);
+      setAdminStatus("Bạn không có quyền admin.", true);
       return;
     }
 
     const data = getSampleFamilyData();
     populateAdminForm(data);
     renderContent(data);
-    setAdminStatus("Da nap du lieu mau. Bam Luu thay doi de ghi vao Firestore.");
+    setAdminStatus("Đã nạp dữ liệu mẫu. Bấm Lưu thay đổi để ghi vào Sheets.");
     scheduleAutoSave();
   });
 }
@@ -1187,12 +1198,12 @@ if (adminSampleButton) {
 if (adminSaveButton) {
   adminSaveButton.addEventListener("click", async () => {
     if (!currentUser || !isAdminUser(currentUser)) {
-      setAdminStatus("Ban khong co quyen admin.", true);
+      setAdminStatus("Bạn không có quyền admin.", true);
       return;
     }
 
     if (configMissing) {
-      setAdminStatus("Can cap nhat firebaseConfig trong script.js.", true);
+      setAdminStatus("Cần cập nhật firebaseConfig trong script.js.", true);
       return;
     }
 
@@ -1200,22 +1211,22 @@ if (adminSaveButton) {
     try {
       data = collectAdminFormData();
     } catch (error) {
-      setAdminStatus("Khong the doc du lieu form.", true);
+      setAdminStatus("Không thể đọc dữ liệu form.", true);
       return;
     }
 
-    setAdminStatus("Dang luu du lieu...");
+    setAdminStatus("Đang lưu dữ liệu...");
 
     try {
       await saveFamilyData(data);
       renderContent(data);
       setAdminStatus(
         sheetsEnabled
-          ? "Da luu du lieu len Google Sheets."
-          : "Da luu du lieu."
+          ? "Đã lưu dữ liệu lên Google Sheets."
+          : "Đã lưu dữ liệu."
       );
     } catch (error) {
-      setAdminStatus("Khong the luu du lieu. Vui long thu lai.", true);
+      setAdminStatus("Không thể lưu dữ liệu. Vui lòng thử lại.", true);
     }
   });
 }
@@ -1242,7 +1253,7 @@ if (authForm) {
     clearAuthError();
 
     if (configMissing) {
-      showAuthError("Can cap nhat firebaseConfig trong script.js.");
+      showAuthError("Cần cập nhật firebaseConfig trong script.js.");
       return;
     }
 
@@ -1254,7 +1265,7 @@ if (authForm) {
       if (authMode === "register") {
         const confirm = String(formData.get("confirm") || "");
         if (!confirm || confirm !== password) {
-          showAuthError("Mat khau xac nhan khong trung khop.");
+          showAuthError("Mật khẩu xác nhận không trùng khớp.");
           return;
         }
 
@@ -1268,19 +1279,19 @@ if (authForm) {
           status: "pending",
           createdAt: serverTimestamp(),
         });
-        showAuthError("Dang ky thanh cong. Tai khoan dang cho duyet.");
+        showAuthError("Đăng ký thành công. Tài khoản đang chờ duyệt.");
         return;
       }
 
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      showAuthError("Dang nhap hoac dang ky that bai. Vui long thu lai.");
+      showAuthError("Đăng nhập hoặc đăng ký thất bại. Vui lòng thử lại.");
     }
   });
 }
 
 if (configMissing) {
-  showAuthError("Can cap nhat firebaseConfig trong script.js.");
+  showAuthError("Cần cập nhật firebaseConfig trong script.js.");
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -1293,7 +1304,7 @@ onAuthStateChanged(auth, async (user) => {
     showAdmin(isAdmin);
 
     if (isAdmin && adminConfigMissing) {
-      setAdminStatus("Can cap nhat admin UID hoac email trong script.js.", true);
+      setAdminStatus("Cần cập nhật admin UID hoặc email trong script.js.", true);
     }
 
     const approval = await checkViewerApproval(user);
@@ -1316,8 +1327,8 @@ onAuthStateChanged(auth, async (user) => {
       setProtectedVisible(false);
       const message =
         approval.status === "rejected"
-          ? "Tai khoan da bi tu choi. Vui long lien he admin."
-          : "Tai khoan cua ban dang cho admin phe duyet.";
+          ? "Tài khoản đã bị từ chối. Vui lòng liên hệ admin."
+          : "Tài khoản của bạn đang chờ admin phê duyệt.";
       setApprovalGateVisible(true, message);
     }
   } else {

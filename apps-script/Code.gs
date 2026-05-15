@@ -1,35 +1,68 @@
 const ACCESS_TOKEN = "";
 
 const SHEETS = {
-  overview: "Overview",
-  members: "Members",
-  timeline: "Timeline",
-  gallery: "Gallery",
-  tree: "Tree",
+  overview: { name: "Tổng quan", legacy: "Overview" },
+  members: { name: "Thành viên", legacy: "Members" },
+  timeline: { name: "Dòng thời gian", legacy: "Timeline" },
+  gallery: { name: "Thư viện", legacy: "Gallery" },
+  tree: { name: "Cây gia phả", legacy: "Tree" },
 };
 
 const META = {
   overview: {
-    headers: ["key", "value"],
+    keys: ["key", "value"],
+    labels: ["Trường", "Giá trị"],
     widths: [180, 520],
   },
   members: {
-    headers: ["name", "role", "birthYear", "deathYear", "bio"],
+    keys: ["name", "role", "birthYear", "deathYear", "bio"],
+    labels: ["Họ tên", "Vai trò", "Năm sinh", "Năm mất", "Ghi chú"],
     widths: [220, 160, 120, 120, 520],
   },
   timeline: {
-    headers: ["year", "text"],
+    keys: ["year", "text"],
+    labels: ["Năm", "Sự kiện"],
     widths: [120, 620],
   },
   gallery: {
-    headers: ["label", "url"],
+    keys: ["label", "url"],
+    labels: ["Nhãn", "URL"],
     widths: [220, 620],
   },
   tree: {
-    headers: ["id", "parentId", "label", "order"],
+    keys: ["id", "parentId", "label", "order"],
+    labels: ["ID", "ID cha", "Nhãn", "Thứ tự"],
     widths: [120, 120, 520, 80],
   },
 };
+
+function normalizeHeader(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getDisplayHeaders(meta) {
+  return meta.labels || meta.headers || meta.keys || [];
+}
+
+function getDataKeys(meta) {
+  return meta.keys || meta.headers || [];
+}
+
+function mapHeadersToKeys(meta, headers) {
+  const keys = getDataKeys(meta);
+  const labels = meta.labels || [];
+  const lookup = {};
+
+  keys.forEach((key, index) => {
+    lookup[normalizeHeader(key)] = key;
+    if (labels[index]) lookup[normalizeHeader(labels[index])] = key;
+  });
+
+  return headers.map((header) => {
+    const normalized = normalizeHeader(header);
+    return lookup[normalized] || String(header || "").trim();
+  });
+}
 
 function isAllowed(e) {
   if (!ACCESS_TOKEN) return true;
@@ -41,12 +74,24 @@ function json(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function getSheet(name, meta) {
+function getSheet(sheetInfo, meta) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
+  const info =
+    typeof sheetInfo === "string" ? { name: sheetInfo } : sheetInfo || {};
+  const primaryName = info.name || "Sheet1";
+  const legacyName = info.legacy;
 
-  const headers = meta.headers;
+  let sheet = ss.getSheetByName(primaryName);
+  if (!sheet && legacyName) {
+    const legacySheet = ss.getSheetByName(legacyName);
+    if (legacySheet) {
+      legacySheet.setName(primaryName);
+      sheet = legacySheet;
+    }
+  }
+  if (!sheet) sheet = ss.insertSheet(primaryName);
+
+  const headers = getDisplayHeaders(meta);
   const lastRow = sheet.getLastRow();
   if (lastRow === 0) {
     sheet.appendRow(headers);
@@ -82,7 +127,7 @@ function getOverview() {
 function setOverview(data) {
   const sheet = getSheet(SHEETS.overview, META.overview);
   sheet.clearContents();
-  sheet.appendRow(META.overview.headers);
+  sheet.appendRow(getDisplayHeaders(META.overview));
 
   const rows = Object.entries(data.overview || {});
   rows.push(["contactEmail", data.contactEmail || ""]);
@@ -95,12 +140,13 @@ function getList(name, meta) {
   if (values.length <= 1) return [];
 
   const headers = values[0].map((h) => String(h || "").trim());
+  const mappedHeaders = mapHeadersToKeys(meta, headers);
   return values
     .slice(1)
     .filter((row) => row.some((cell) => cell !== ""))
     .map((row) => {
       const obj = {};
-      headers.forEach((key, idx) => {
+      mappedHeaders.forEach((key, idx) => {
         obj[key] = row[idx] ?? "";
       });
       return obj;
@@ -110,10 +156,11 @@ function getList(name, meta) {
 function setList(name, meta, rows) {
   const sheet = getSheet(name, meta);
   sheet.clearContents();
-  sheet.appendRow(meta.headers);
+  const dataKeys = getDataKeys(meta);
+  sheet.appendRow(getDisplayHeaders(meta));
 
   (rows || []).forEach((row) => {
-    sheet.appendRow(meta.headers.map((key) => row[key] ?? ""));
+    sheet.appendRow(dataKeys.map((key) => row[key] ?? ""));
   });
 }
 
