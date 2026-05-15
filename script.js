@@ -1606,22 +1606,43 @@ onAuthStateChanged(auth, async (user) => {
       setAdminStatus("Cần cập nhật admin UID hoặc email trong script.js.", true);
     }
 
-    const approval = await checkViewerApproval(user);
-    if (approval.approved) {
+    if (isAdmin) {
       setProtectedVisible(true);
-      setActiveSection(getActiveSectionId());
       setApprovalGateVisible(false);
       startReveal();
 
       if (!dataLoaded) {
         dataLoaded = true;
         const data = await loadFamilyData();
-        if (isAdmin) {
-          populateAdminForm(data);
-          loadApprovalRequests();
-        }
-      } else if (isAdmin) {
+        populateAdminForm(data);
         loadApprovalRequests();
+      } else {
+        loadApprovalRequests();
+      }
+      return;
+    }
+
+    let approval = null;
+    try {
+      approval = await checkViewerApproval(user);
+    } catch (error) {
+      console.error("Approval check failed", error);
+      setProtectedVisible(false);
+      setApprovalGateVisible(
+        true,
+        "Không thể xác minh tài khoản. Vui lòng kiểm tra kết nối hoặc liên hệ admin."
+      );
+      return;
+    }
+
+    if (approval.approved) {
+      setProtectedVisible(true);
+      setApprovalGateVisible(false);
+      startReveal();
+
+      if (!dataLoaded) {
+        dataLoaded = true;
+        await loadFamilyData();
       }
     } else {
       setProtectedVisible(false);
