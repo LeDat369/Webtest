@@ -229,6 +229,7 @@ const setProtectedVisible = (isVisible) => {
     document
       .querySelectorAll(".section, .hero, .site-footer")
       .forEach((section) => section.classList.add("in-view"));
+    setActiveSection(getActiveSectionId());
   }
 };
 
@@ -250,7 +251,7 @@ const setActiveSection = (sectionId) => {
   sections.forEach((section) => {
     const isActive = section === target;
     section.classList.toggle("page-hidden", !isActive);
-    section.style.display = isActive ? "" : "none";
+    section.hidden = !isActive;
     if (isActive) section.classList.add("in-view");
   });
 };
